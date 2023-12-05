@@ -290,8 +290,9 @@ def drawFruits_LevelOne(app): # NOTE FOR LATER: update index if all fruits are c
         drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE 
 
 def drawGreenOgre_LevelOne(app):
-    row, col = app.greenOgre.cell
-    drawWorldImgs(app, row, col, app.greenOgreImg)
+    # row, col = app.greenOgre.cell
+    # drawWorldImgs(app, row, col, app.greenOgreImg)
+    drawMovableSprite(app, app.greenOgre.x, app.greenOgre.y, app.greenOgreImg)
 
 ## MAIN FUNCS ##
 def LevelOne_redrawAll(app):
