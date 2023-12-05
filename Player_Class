@@ -13,6 +13,8 @@ class Player:
         self.lives = 3
         self.spriteChosen = None
         self.time = 0
+        self.overallTime = 0
+        self.level = None
 
     def __repr__(self):
         return 'yea ig this is a player'
@@ -27,9 +29,9 @@ class Player:
         self.x_goal, self.y_Goal = board.getCellLeftTop(startingX, startingY)
 
     # BEHAVIOR 
-    def collectFruit(self, level, newPlrRow, newPlrCol): # USING 
+    def collectFruit(self, newPlrRow, newPlrCol): # USING 
         # add fruits here and unadd from fruits in MAP/WORLD'
-        level.removeFruit((newPlrRow, newPlrCol))
+        self.level.removeFruit((newPlrRow, newPlrCol))
         self.fruitsCollected += 1 
         print(f'Cool, collected a fruit ! Currently have {self.fruitsCollected} fruit(s) ')
 
@@ -44,7 +46,6 @@ class Player:
     def createOrDestroyIce_Col(self, app, start, end, col, increment): # helper func - mutating
         isCreatingIce = False if (start, col ) in app.iceCoordinates else True
         #DIFF
-        print(self.isMoving)
         if self.isMoving == True:
             print('####################################################################################')
             # extraSinceMoving = 1 if self.direction == else -1 
@@ -62,7 +63,6 @@ class Player:
     
     def createOrDestroyIce_Row(self, app, start, end, row, increment): #  helper func - mutating
         
-        print('entered this func')
         isCreatingIce = False if (row, start ) in app.iceCoordinates else True
 
         if self.isMoving == True:
@@ -101,9 +101,9 @@ class Player:
     
     #  MOVE
     #  PLAYER WALKS TO DIF CELL -- collisions for player should be good now
-    def takeStep(self, app, isLegal, level):
-        fruit = app.level_1.fruitsInLevel[app.level_1.fruitIndex]
-        fruitCoordinates = app.level_1.getCoordsOfFruit(fruit)
+    def takeStep(self, app, isLegal):
+        fruit = self.level.fruitsInLevel[self.level.fruitIndex]
+        fruitCoordinates = self.level.getCoordsOfFruit(fruit)
 
         plrRow, plrCol = self.cell
         drow, dcol = self.direction 
@@ -118,23 +118,21 @@ class Player:
                 #fruit was eaten 
                 if len(fruitCoordinates) > 0: 
                     # you still have somewhat to go, there's stil fruits on the map
-                    self.collectFruit(level, newPlrRow, newPlrCol)
+                    self.collectFruit(newPlrRow, newPlrCol)
             elif len(fruitCoordinates) == 0:
             
-                if app.level_1.fruitIndex + 1 == len(app.level_1.fruitsInLevel):
+                if self.level.fruitIndex + 1 == len(self.level.fruitsInLevel):
                     # collected all fruits!
                     app.gameWon = True
                     app.gameOver = True
                     print('all fruit were collected! was won! game won??? o_o')
                 else:
-                    app.level_1.fruitIndex += 1
-
+                    self.level.fruitIndex += 1
 
     def tweenSprite(self, currRow, currCol, newRow, newCol, board): 
         currX, currY = board.getCellLeftTop(currRow, currCol)
         goalX, goalY = board.getCellLeftTop(newRow, newCol)
         if (currX != goalX ) or (currY != goalY):
-            # print('Should be tweening bc x != x or vise versa y')
             self.setPlayerCoordinates_Goal(goalX, goalY) ## this makes onstep() work 
             self.cell_goal = (newRow, newCol)
 
@@ -144,8 +142,7 @@ class Player:
             self.x -= 5
         elif self.x < self.x_goal:
             self.x += 5
-        if int(self.x)// 10 == int(self.x_goal)// 10: 
-            # print('both should be equal ')
+        if int(self.x)// 10 == int(self.x_goal)// 10: # both are equal
             self.x = self.x_goal
 
     def tweenYValues(self):
@@ -154,8 +151,7 @@ class Player:
             self.y -= 5
         elif self.y < self.y_Goal:
             self.y += 5
-        if int(self.y) // 10 == int(self.y_Goal) // 10: 
-            # print('both should be equal ')
+        if int(self.y) // 10 == int(self.y_Goal) // 10: # both are equal
             self.y = self.y_Goal
 
 
