@@ -2,6 +2,7 @@ class Enemy:
     def __init__(self, cell, direction ):
         self.cell = cell
         self.direction = direction # going down 
+        # MOVEMENT is on onStep()
 
 ## GREEN OGRE 
 class GreenOgre:
@@ -9,56 +10,42 @@ class GreenOgre:
         self.cell = cell
         self.cell_goal = cell
         self.direction = direction # going down 
-        print(' green ogre was set')
-        print( self.cell, self.cell_goal)
         
-        
-    def takeStep(self, app): # MOVEMENT is on onStep()
-        
-
-        rowEnemy, colEnemy = self.cell
-        drow, dcol = self.direction 
-        newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
-
-        isLegal, var2 = self.takeStep_Helper( newPlrRow, newPlrCol, app)
-
-        if isLegal:
-            self.tweenSprite(rowEnemy, colEnemy, newPlrRow, newPlrCol, app.board) ### ##########################################
-            print('tuple was legal')
-            # self.cell_goal = var2
-        # else:
-            # self.direction = var2
-
-    # ENEMY TAKES STEPS / MOVES CELLS - think this is fine, works same as game 
-    def takeStep_Helper(self, isLegal, newPlrRow, newPlrCol, app):
-        #                    [ DOWN,   RIGHT, UP,  LEFT]  
-        possibleDirections = [(1, 0),  (0, 1), (-1, 0),  (0, -1)]
-        
-        index =  possibleDirections.index( self.direction ) 
-        rowEnemy, colEnemy = self.cell
-        drow, dcol = self.direction 
-        newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
-
-        if isLegalStep(app, newPlrRow, newPlrCol):
-            #actually move
-            return True, (newPlrRow, newPlrCol)
-        else:
-            # ogre crashed into a wall- change directions, quick !
-            index += 1 
-            return False, possibleDirections[ index % 4]
-
     def start_setExactCoordinates(self, board):
         startingX, startingY = self.cell
         # set x and y's for tweening 
         self.x, self.y = board.getCellLeftTop(startingX, startingY )
         self.x_goal, self.y_Goal = board.getCellLeftTop(startingX, startingY)
 
+    def takeStep(self, isLegal, app):
+        isLegal, var2 = self.takeStep_Helper(isLegal, app)
+        if isLegal:
+            self.cell_goal = var2
+        else:
+            self.direction = var2
+
+    # ENEMY TAKES STEPS / MOVES CELLS - think this is fine, works same as game 
+    def takeStep_Helper(self, isLegal, app):
+        #                    [ DOWN,   RIGHT, UP,  LEFT]  
+        possibleDirections = [(1, 0),  (0, 1), (-1, 0),  (0, -1)]
+        index =  possibleDirections.index( self.direction ) 
+        rowEnemy, colEnemy = self.cell
+        drow, dcol = self.direction 
+        newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
+        if isLegal: #  isLegalStep(app, newPlrRow, newPlrCol) 
+            #actually move
+            self.tweenSprite(rowEnemy, colEnemy, newPlrRow, newPlrCol, app.board) ### ##########################################
+            return True, (newPlrRow, newPlrCol)
+        else:
+            # ogre crashed into a wall- change directions, quick !
+            index += 1 
+            return False, possibleDirections[ index % 4]
+
     def setCoordinates_Goal(self, goalX, goalY):
         self.x_goal, self.y_Goal = goalX, goalY
 
     # SAME AS PLAYER .. HMM MAYBE MAKE THEM A CLASS NEXT TIME
     def tweenSprite(self, currRow, currCol, newRow, newCol, board): 
-        print((currRow, currCol), (newRow, newCol))
         currX, currY = board.getCellLeftTop(currRow, currCol)
         goalX, goalY = board.getCellLeftTop(newRow, newCol)
         if (currX != goalX ) or (currY != goalY):
@@ -84,11 +71,6 @@ class GreenOgre:
             # print('both should be equal ')
             self.y = self.y_Goal
 
-def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
-    outOfBounds =  isOutOfBounds(app, newPlrRow, newPlrCol)  
-    notOnIce =  (newPlrRow, newPlrCol) in app.iceCoordinates
-    notCreashingOntoWall =  (newPlrRow, newPlrCol) in app.wallCoordinates
-    return not ( outOfBounds or notOnIce or notCreashingOntoWall)
 
 def isOutOfBounds(app, newPlrRow, newPlrCol):
     if ((newPlrRow < 0) or (newPlrRow >= app.board.rows) or
@@ -96,6 +78,11 @@ def isOutOfBounds(app, newPlrRow, newPlrCol):
         return True
     return False
 
+def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
+    outOfBounds =  isOutOfBounds(app, newPlrRow, newPlrCol)  
+    notOnIce =  (newPlrRow, newPlrCol) in app.iceCoordinates
+    notCreashingOntoWall =  (newPlrRow, newPlrCol) in app.wallCoordinates
+    return not ( outOfBounds or notOnIce or notCreashingOntoWall)
 
 """
 
