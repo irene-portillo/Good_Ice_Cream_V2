@@ -1,10 +1,12 @@
 # trying to make game using clases
 # Test File now , split into classes  
 from cmu_graphics import * 
+import random 
 # Modules from lecture used to import images 
 
 from PIL import Image
 import os, pathlib
+
 # My classes
 from Player_Class import Player 
 from Enemy_Class import GreenOgre
@@ -36,6 +38,7 @@ def generateWorldImgs(app):
     # - for all fruits
     app.lemonFruit = generateSingleImg(app, "SingleImages/lemon.png")
     app.grapeFruit = generateSingleImg(app, "SingleImages/grapes.png")
+    app.strawberryFruit = generateSingleImg(app, "SingleImages/strawberry.png")
     # CITATION: https://www.spriters-resource.com/resources/sheets/183/186433.png?updated=1667962706
     # - for all extras
     app.clockImg = generateSingleImg(app, "SingleImages/singleClock.png")
@@ -122,7 +125,7 @@ def drawMovableSprite(app, x, y, sprite):
 
 def playerTakeStep(app, direction):
     app.playerOne.direction = direction
-    app.playerOne.takeStep(app, checkIfLegal(app), app.Level)
+    app.playerOne.takeStep(app, checkIfLegal(app))
 
 def tweenPlayer(app):
     #  TWEEN PLAYER  
@@ -131,7 +134,6 @@ def tweenPlayer(app):
     elif app.playerOne.y != app.playerOne.y_Goal:
         app.playerOne.tweenYValues()
     else: # both x and y are equal
-        # print('at goal')
         app.playerOne.isMoving = False
         app.playerOne.cell = app.playerOne.cell_goal # set the cell
 
@@ -142,7 +144,6 @@ def tweenGreenOgre(app):
     elif app.greenOgre.y != app.greenOgre.y_Goal:
         app.greenOgre.tweenYValues()
     else: # both x and y are equal
-        # print('at goal')
         app.greenOgre.cell = app.greenOgre.cell_goal # set the cell
 
 def checkIfPlrWasTouched_GreenOgre(app, level): # need to change stepPerSecond for this to properly catch all 
@@ -173,11 +174,9 @@ def pressedKey(app, key):
         # CREATE/DESTROY ICE
         if key == app.playerOne.controlsList[4]: 
             app.playerOne.manageIce(app)
-            # print(app.iceCoordinates)
             # updateRowDict(app.board, app.iceCoordinates) 
 
 def heldKeys(app, keys):
-    print(app.gameOver)
     if not app.gameOver: 
         if app.playerOne.controlsList[1] in keys : # UP    
             playerTakeStep(app, (-1, 0)) # # drow, dcol
@@ -225,17 +224,17 @@ def drawWalls(app):
 
 ## HELPER FUNCTIONS ##
 
-def updateRowDict(board, coordinates):
+def updateRowDict(board, coordinates): ## DEL LATER, DIDNT END UP USING 
     for row, col in coordinates:
         board.addColToDict(row, col)
     # board.printRowDict()
 
 def setSquareCoordinates(start, totalRows):
     coordinates = [] 
-    for num in range(start, totalRows):
-        firstRowCord = (start, num) # same row, dif column'
+    for num in range(start + 1, totalRows): # 
+        firstRowCord = (start, num - 1) # same row, dif column'
         leftColCord = (num, start) # same col, diff row
-        rightColCord = (num, totalRows - 1) # same col (but 2nd to last) but diff row 
+        rightColCord = (num -1, totalRows - 1) # same col (but 2nd to last) but diff row 
         bottomRowCord = (totalRows - 1, num) # same row (but 2nd to last) but diff cols
         coordinates.extend( [firstRowCord, leftColCord, rightColCord, bottomRowCord])
     # for num in range( start, end)
@@ -297,19 +296,65 @@ def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
 
 
 ## LEVEL TWO ##///////////////////////////////////////////////////////////////////////////////////////////////////
+def drawFruits_LevelTwo(app):
+    """
+    # drawing all fruits at once
+    for fruit in app.level_1.dictOfFruitCoords:
+        listOFCoords = app.level_1.getCoordsOfFruit(fruit)
+        print( f"Coords for fruit -- {fruit} : {listOFCoords}")
+        
+        for (row, col) in listOFCoords: 
+            drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE  
+    """
+    fruit = app.level_2.fruitsInLevel[ app.level_1.fruitIndex ]
+    listOFCoords = app.level_2.getCoordsOfFruit(fruit)    
+    for (row, col) in listOFCoords: 
+        drawWorldImgs(app, row, col, app.level_2.getImageOfFruit(fruit)) # DRAW FRUIT HERE
+
+def setStrawBerries_Level2(app) :
+    return setSquareCoordinates(6, app.board.rows - 6)
+
+def setIceCoordinates_LevelTwo(app):
+    app.iceCoordinates = setSquareCoordinates(1, app.board.rows - 1)
+
+
+#PLACE FOOD RANDOMLY - not using but could use for the strawberries if u want .. 
+def setRandomCoords(app):
+    fruit = app.playerOne.level.fruitsInLevel[app.playerOne.level.fruitIndex]
+    listOfFruits = app.playerOne.level.getCoordsOfFruit(fruit)  
+    numOfFruits = len(listOfFruits)
+    newCoords = []
+
+    while len(newCoords) < numOfFruits:
+        newRow = random.randrange(app.board.rows) # random row 
+        newCol = random.randrange(app.board.cols) # random col
+        
+        if isLegalStep(app, newRow, newCol):
+            newCoords.append( (newRow, newCol) )
+    return newCoords 
+
+def setNewStrawberryCoords(app):
+    if app.stepsPerTime % 20 == 0: 
+        fruit = app.playerOne.level.fruitsInLevel[app.playerOne.level.fruitIndex]
+        if fruit == 'strawberry':
+            newCoords = setRandomCoords(app)
+            app.playerOne.level.setDictOfFruits( fruit, newCoords,  app.strawberryFruit)
 
 def resetValuesToSTartLevel2(app):
     app.wallCoordinates = None
     setWallCoordinates(app.board, app)
     app.iceCoordinates = []
+    setIceCoordinates_LevelTwo(app)
+
     app.gameOver = False
     app.gameWon = False
-
-
     
-    app.level_2 = Level(1, ['strawberry'])
+    app.level_2 = Level(1, ['strawberry'])  
+
+    app.level_2.setDictOfFruits('strawberry', setStrawBerries_Level2(app), app.strawberryFruit) 
     
-    app.Level = app.level_2  
+    app.playerOne.level= app.level_2  
+        
 
 def LevelTwo_redrawAll(app):
     # Enviornment
@@ -318,7 +363,7 @@ def LevelTwo_redrawAll(app):
     drawIce(app)
 
     # Fruit ! 
-    # drawFruits_LevelTwo(app)
+    drawFruits_LevelTwo(app)
 
     # Player
     drawPlayer(app)
@@ -337,7 +382,7 @@ def LevelTwo_redrawAll(app):
 
 # MONITOR USER INPUT 
 def LevelTwo_onKeyPress(app, key):
-    pressedKey(app, key)
+    pressedKey(app, key)    
 
 # MOVEMENT (DIFFERENT CELL) 
 def LevelTwo_onKeyHold(app, keys): # maybe make it so that u can only hold one of the keys down besides f 
@@ -351,6 +396,12 @@ def LevelTwo_onStep(app):
 
         # add time 
         addTime(app)
+
+        # random coordinates for strawberies 
+        # later add a check to see if player is in a strawberry coord then collect, bc otherwise wont register
+        setNewStrawberryCoords(app)
+
+
 
 
 ## LEVEL ONE  ##////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -383,7 +434,7 @@ def setGreenOgre_LevelOne(app):
     app.greenOgre = GreenOgre( (14, 2), (0, 1) )
     app.greenOgre.start_setExactCoordinates( app.board)
 
-def drawFruits_LevelOne(app): # NOTE FOR LATER: update index if all fruits are collected 
+def drawFruits_LevelOne(app):
     """
     # drawing all fruits at once
     for fruit in app.level_1.dictOfFruitCoords:
@@ -434,6 +485,8 @@ def restartLevel_1(app):
     app.playerOne.cell =  (3,3)
     app.playerDirection = (0, -1)
     app.playerOne.start_setPlayerExactCoordinates(app.board)
+    # reset time ! 
+    app.playerOne.overallTime = app.playerOne.time
 
 
 ## MAIN FUNCS ##
@@ -550,7 +603,7 @@ def customize_onMousePress(app, mouseX, mouseY):
         elif index == 2:
             app.playerOne.spriteChosen = app.strawberryImg
         
-        app.Level = app.level_1
+        app.playerOne.level= app.level_1
         setActiveScreen('LevelOne')
         
 def customize_redrawAll(app):
@@ -591,7 +644,6 @@ def onAppStart(app):
     generateWorldImgs(app)
     generateMenuImgs(app)
     setPlayer(app)  
-    app.Level = None  
     app.gameOver = False
     app.gameWon = False
     app.stepsPerTime = 30 # bc 30 per sec
