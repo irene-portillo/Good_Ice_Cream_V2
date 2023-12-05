@@ -1,0 +1,70 @@
+# from attemptOne_ImportingClasses import *
+
+class Board:
+
+    def __init__( self, rows, cols, cellBoarderWidth, boardLeft, boardTop, boardWidth, boardHeight):
+        self.rows = rows  
+        self.cols = cols   
+        self.cellBoarderWidth = cellBoarderWidth  
+        self.boardLeft = boardLeft
+        self.boardTop = boardTop  
+        self.boardWidth = boardWidth   
+        self.boardHeight = boardHeight  
+        self.createRowsDict() # tuples of the board ???
+
+    def __repr__(self):
+        return 'this is a board' 
+    
+    def getCellSize(self):
+            cellWidth = self.boardHeight / self.cols # so that it's a square, using height  
+            cellHeight = self.boardHeight / self.rows
+            return (cellWidth, cellHeight)
+    
+    def getCellLeftTop(self, row, col):
+        cellWidth, cellHeight = self.getCellSize()
+        cellLeft = self.boardLeft + col * cellWidth
+        cellTop = self.boardTop + row * cellHeight
+        return (cellLeft, cellTop)
+
+    ## THIS IS NEW
+    def createRowsDict(self): # should have walls, ice, enemies location and player 
+        self.rowDict = dict()
+        for rowNum in range(self.rows):
+            # add colum to list if it's in the row 
+            self.rowDict[ str(rowNum) ] = list() #['row', 'col', 'obj']
+        """
+        If I do this, this means i will check if obj is in a tuple or space, etc. 2
+        
+        """
+
+    def addColToDict(self, row, col):
+        print(row)
+        if col not in self.rowDict[ str(row) ]: 
+            self.rowDict[ str(row) ].append(col)
+        else:
+            print(f'col ({col}) was already in list for {row}..')
+    
+    def removeColFromDict(self, row, col):
+        if col in self.rowDict[ str(row) ]: 
+            index = self.rowDict.index(row) # this could crash hmm, maybe put in a try statement
+            self.rowDict[ str(row) ].pop(index)
+        else:
+            print(f'col ({col}) was not found in list for {row}..')
+    def printRowDict(self):
+        for key in range(len(self.rowDict)):
+            print(f'{key}: {self.rowDict[ str(key) ]}')
+
+print('created a BOARD class ! ') 
+
+""" OLD CODE, del after done 
+    
+from other file:
+    CITATION: Board from snake on CS Academy - https://academy.cs.cmu.edu/exercise/13122
+    BOARD - SET VALUES 
+    def setAppValsForBoardPermanent(app):
+        app.rows = 18
+        app.cols = 18
+        app.cellBorderWidth = 1
+"""
+
+
