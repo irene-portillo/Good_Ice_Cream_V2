@@ -1,46 +1,607 @@
-# Decided to combine fruit class in here too because level holds the fruis
+# trying to make game using clases
+# Test File now , split into classes  
+from cmu_graphics import * 
+# Modules from lecture used to import images 
 
-class Fruit:
-    def __init__(self, listOfCoords, Image):
-        self.listOfCoords= listOfCoords
-        self.Image = Image 
+from PIL import Image
+import os, pathlib
+# My classes
+from Player_Class import Player 
+from Enemy_Class import GreenOgre
+from Board_Class import Board
+from Level_Class import Level
 
-class Level:
-    def __init__(self, levelNum, fruitsInLevel):
-        self.levelNum = levelNum
-        self.fruitsInLevel = fruitsInLevel
-        self.fruitIndex = 0
+## GENERAL GAME ASSESTS ## /////////////////////////////////////////////////////////////////////////////
+## IMAGES ## --------------------------------------------------------------------------
+ 
+# CITATION: basiclPILMethods.py Demo by CMU 15-112 found on Piazza - https://piazza.com/class/lkq6ivek5cg1bc/post/2147 
+def openImage(fileName):
+    return Image.open(os.path.join(pathlib.Path(__file__).parent,fileName))
 
+# CREATE ALL WORLD IMGS
+def generateWorldImgs(app):
+    # CITATION: https://www.spriters-resource.com/resources/sheets/126/129363.png?updated=1586740764 (cropped each out)
+    # - for all ice creams
+    app.vanillaImg = generateSingleImg(app, "SingleImages/vanilla_Transparent.png")    
+    app.chocolateImg = generateSingleImg(app, "SingleImages/chocolate_IceCream.png")
+    app.strawberryImg = generateSingleImg(app, "SingleImages/strawberry_IceCream.png")
+    # CITATION: https://www.spriters-resource.com/resources/sheets/136/138810.png?updated=1599234272
+    app.greenOgreImg = generateSingleImg(app, "SingleImages/greenOgre.png" )
+    # CITATION: https://www.spriters-resource.com/resources/sheets/190/193477.png?updated=1678723693
+    app.blueOgreImg = generateSingleImg(app, "SingleImages/blueOgre.png" )
 
-        self.dictOfFruitCoords = dict()
-        for fruit in fruitsInLevel:
-            self.dictOfFruitCoords[fruit] = None
+    # CITATION: https://static.wikia.nocookie.net/nitrome/images/b/b1/Ice_Block.png/revision/latest/thumbnail/width/360/height/360?cb=20121214040050
+    app.iceBlockImg = generateSingleImg(app, "SingleImages/iceBlock_Transparent.png")
+    # CITATION: https://static.wikia.nocookie.net/nitrome/images/7/72/BIC_All_Fruits.png/revision/latest/thumbnail/width/360/height/360?cb=20131221133509
+    # - for all fruits
+    app.lemonFruit = generateSingleImg(app, "SingleImages/lemon.png")
+    app.grapeFruit = generateSingleImg(app, "SingleImages/grapes.png")
+    # CITATION: https://www.spriters-resource.com/resources/sheets/183/186433.png?updated=1667962706
+    # - for all extras
+    app.clockImg = generateSingleImg(app, "SingleImages/singleClock.png")
+    app.fruitContainer_Left = generateSingleImg(app, "Images/Extras/fruitContainer_Left.png")
+    app.fruitContainer_MiddleImg = generateSingleImg(app, "Images/Extras/fruitContainer_Middle.png")
+    app.fruitContainer_RightImg = generateSingleImg(app, "Images/Extras/fruitContainer_Right.png")
+    # CITATION: https://poki.com/en/g/bad-ice-cream?campaign=14726801018&adgroup=126978578349&extensionid=&targetid=kwd-5566849837&location=9005925&matchtype=e&network=g&device=c&devicemodel=&creative=583090060249&keyword=bad%20ice%20cream&placement=&target=&gclid=CjwKCAiAvJarBhA1EiwAGgZl0LihrDH9JJxw4csden6dycdQH5nRVLVdsqh-Zz5Oe_lDRkcSs9XfQRoCPWEQAvD_BwE
+    # - screen shots from the 'Bad Ice Cream' game
+    # - then pieced together with Pixlr
+    #   CITATION: https://pixlr.com/express/
+    app.wallImage = generateSingleImg(app, "Images/worldImages/wallBlock.png")
+    app.backgroundSnow = generateSingleImg(app, "Images/worldImages/snowBackground_Square.png")
+    app.chooseCharImg = generateSingleImg(app, "Images/chooseChar_single.png")
 
-    def __repr__(self):
-        return f'level {self.levelNum}, dict of fruits: {self.dictOfFruitCoords}'
+    # CITATION: https://cdn.pixabay.com/photo/2017/09/23/16/33/pixel-heart-2779422_640.png
+    app.livesImg = generateSingleImg(app, "Images/heart_1.png")
 
-    def setDictOfFruits(self, fruit, listOfCoords, Image):
-        if fruit in self.dictOfFruitCoords:
-            # print('this should have been made..')
-            self.dictOfFruitCoords[fruit] = Fruit( listOfCoords, Image)
-        else:
-            print('Fruit was not found')
+    # CITATION: https://art.pixilart.com/661116b177fe475.png  
+    app.fruitsCollectedImg = generateSingleImg(app, "Images/fruitsCollected.png")
 
-    def getCoordsOfFruit(self, fruit):
-        if fruit in self.dictOfFruitCoords:
-            return self.dictOfFruitCoords[fruit].listOfCoords
+# For MENU -- kind of like a GIF
+def generateMenuImgs(app):
+    # CITATION: https://poki.com/en/g/bad-ice-cream?campaign=14726801018&adgroup=126978578349&extensionid=&targetid=kwd-5566849837&location=9005925&matchtype=e&network=g&device=c&devicemodel=&creative=583090060249&keyword=bad%20ice%20cream&placement=&target=&gclid=CjwKCAiAvJarBhA1EiwAGgZl0LihrDH9JJxw4csden6dycdQH5nRVLVdsqh-Zz5Oe_lDRkcSs9XfQRoCPWEQAvD_BwE
+    # - screen shots from the 'Bad Ice Cream' game
+    app.menuImages = []
+    for i in range(1, 7): # in my 'Menu Screen' folder, they're name from 1 to 6 
+        image = generateSingleImg(app, f"Images/MenuScreen/{i}.png")
+        app.menuImages.append( image )
+
+# CREATE SINGLE IMG
+def generateSingleImg(app, directory):
+    # image = Image.open(directory)
+    image = openImage(directory)
+    return CMUImage(image) # make it a CMU image
+
+def addTime(app):
+    app.stepsPerTime += 1
+    if app.stepsPerTime % 4 == 0:
+        app.playerOne.time +=1
+
+# DRAW THE IMAGES
+def drawWorldImgs(app, row, col, sprite):
+    cellLeft, cellTop = app.board.getCellLeftTop(row, col)
+    cellWidth, cellHeight = app.board.getCellSize()
+    drawImage(sprite, cellLeft, cellTop, width = cellWidth, height = cellHeight)
+
+def drawWorldLabel(app, row, col, text, alignVal='center'):
+    cellLeft, cellTop = app.board.getCellLeftTop(row, col)
+    cellWidth, cellHeight = app.board.getCellSize()
+    drawLabel(text, cellLeft + cellWidth/2, cellTop + cellHeight/2, fill='white', border='black', borderWidth=1, size = 15, align = alignVal, bold = True)
+          #size=12, font='arial',
+        #   bold=False, italic=False,
+        #   fill='black', border=None, borderWidth=2,
+        #   opacity=100, rotateAngle=0, align='center')
+
+def drawSnowFloor(app):
+    x, y = app.board.getCellSize() # did this to seperate the variables 
+    lenOfSqr = x * app.board.rows 
+    drawImage(app.backgroundSnow, 0, 0 , width = lenOfSqr, height = lenOfSqr )
+
+def drawIce(app):
+    for (row, col) in app.iceCoordinates:
+        drawWorldImgs(app, row, col, app.iceBlockImg) # DRAW ICE HERE 
+
+def drawLives(app):
+    drawWorldImgs(app, 0, 16, app.livesImg) 
+    drawWorldLabel(app, 0, 17, str(app.playerOne.lives))
+
+def drawFruitsCollected(app):
+    drawWorldImgs(app, 0, 13, app.fruitsCollectedImg) 
+    drawWorldLabel(app, 0, 14, str(app.playerOne.fruitsCollected))
+
+def drawTime(app):
+    drawWorldImgs(app, 0, 1, app.clockImg ) 
+    drawWorldLabel(app, 0, 2, f"{app.playerOne.time} sec(s)", 'left')
+
+## PLAYER ---------------------------------------------------------------------
+def drawPlayer(app):
+    drawMovableSprite(app, app.playerOne.x, app.playerOne.y, app.playerOne.spriteChosen)
+
+def drawMovableSprite(app, x, y, sprite):
+    cellWidth, cellHeight = app.board.getCellSize()
+    drawImage(sprite, x, y, width = cellWidth, height = cellHeight )
+
+def playerTakeStep(app, direction):
+    app.playerOne.direction = direction
+    app.playerOne.takeStep(app, checkIfLegal(app), app.Level)
+
+def tweenPlayer(app):
+    #  TWEEN PLAYER  
+    if app.playerOne.x != app.playerOne.x_goal: # press 'a' or 'd' to check this or 
+        app.playerOne.tweenXValues()
+    elif app.playerOne.y != app.playerOne.y_Goal:
+        app.playerOne.tweenYValues()
+    else: # both x and y are equal
+        # print('at goal')
+        app.playerOne.isMoving = False
+        app.playerOne.cell = app.playerOne.cell_goal # set the cell
+
+def tweenGreenOgre(app):
+    #  TWEEN PLAYER  
+    if app.greenOgre.x != app.greenOgre.x_goal: # press 'a' or 'd' to check this or 
+        app.greenOgre.tweenXValues()
+    elif app.greenOgre.y != app.greenOgre.y_Goal:
+        app.greenOgre.tweenYValues()
+    else: # both x and y are equal
+        # print('at goal')
+        app.greenOgre.cell = app.greenOgre.cell_goal # set the cell
+
+def checkIfPlrWasTouched_GreenOgre(app, level): # need to change stepPerSecond for this to properly catch all 
+    if app.playerOne.cell == app.greenOgre.cell:
+        app.playerOne.loseLife()
+        if level == 1:
+            print('restarted level 1!')
+            restartLevel_1(app)            
+        print(f'lives remaining: {app.playerOne.lives}')
+        if app.playerOne.lives == 0:
+            app.gameOver = True
+            app.playerOne.lives = 0
+
+## MOVEMENT
+# CITATION: MOVEMENT LOGIC derived from snake on CS Academy - https://academy.cs.cmu.edu/exercise/13122
+def pressedKey(app, key):
     
-    def getImageOfFruit(self, fruit):
-        if fruit in self.dictOfFruitCoords:
-            return self.dictOfFruitCoords[fruit].Image
+    if not app.gameOver:
+        # MOVEMENT (TURNING) 
+        if key == app.playerOne.controlsList[1]: # UP 
+            app.playerOne.direction = (-1, 0) #drow, dcol
+        elif key == app.playerOne.controlsList[3]: # DOWN 
+            app.playerOne.direction = (1, 0)
+        elif key == app.playerOne.controlsList[0]: # LEFT
+            app.playerOne.direction = (0, -1)
+        elif key == app.playerOne.controlsList[2]: # RIGHT
+            app.playerOne.direction = (0, 1)
+        # CREATE/DESTROY ICE
+        if key == app.playerOne.controlsList[4]: 
+            app.playerOne.manageIce(app)
+            # print(app.iceCoordinates)
+            # updateRowDict(app.board, app.iceCoordinates) 
+
+def heldKeys(app, keys):
+    print(app.gameOver)
+    if not app.gameOver: 
+        if app.playerOne.controlsList[1] in keys : # UP    
+            playerTakeStep(app, (-1, 0)) # # drow, dcol
+        elif app.playerOne.controlsList[3] in keys: # DOWN
+            playerTakeStep(app, (1, 0))
+        elif app.playerOne.controlsList[0] in keys: # LEFT
+            playerTakeStep(app, (0, -1))
+        elif app.playerOne.controlsList[2] in keys: # RIGHT 
+            playerTakeStep(app, (0, 1) )
+
+## CREATING THE BOARD ## -------------------------------------------------------------
+def setBoard(app):
+    boardWidth = app.width - (app.width / 20)
+    app.board = Board( 18, 18, 1 , 0, 0, boardWidth, app.height) # ( rows, cols, cellBoarderWidth, boardLeft, boardTop, boardWidth, boardHeight
+    print('done setting board ')
+
+# CITATION: BOARD from snake on CS Academy - https://academy.cs.cmu.edu/exercise/13122
+def drawBoard(board):
+    for row in range(board.rows):
+        for col in range(board.cols):
+            drawCell(board, row, col)
+            
+def drawBoardBorder(board):
+  # Draw the board outline (with double-thickness):
+  drawRect(board.boardLeft, board.boardTop, board.boardHeight, board.boardHeight,
+           fill=None, border='black',
+           borderWidth=2*board.cellBoarderWidth)
+
+def drawCell(board, row, col): 
+    cellLeft, cellTop = board.getCellLeftTop( row, col)
+    cellWidth, cellHeight = board.getCellSize()
+    drawRect(cellLeft, cellTop, cellWidth, cellHeight,
+             fill=None, border='black',
+             borderWidth=board.cellBoarderWidth)
+
+## CREATING THE WALLS ## -------------------------------------------------------------
+
+def setWallCoordinates(board, app):
+    app.wallCoordinates = setSquareCoordinates(0, board.rows - 0)
+    # updateRowDict(app.board, app.wallCoordinates)    
+
+def drawWalls(app):
+    for (row, col) in app.wallCoordinates:
+        drawWorldImgs(app, row, col, app.wallImage) # DRAW ICE HERE
+
+## HELPER FUNCTIONS ##
+
+def updateRowDict(board, coordinates):
+    for row, col in coordinates:
+        board.addColToDict(row, col)
+    # board.printRowDict()
+
+def setSquareCoordinates(start, totalRows):
+    coordinates = [] 
+    for num in range(start, totalRows):
+        firstRowCord = (start, num) # same row, dif column'
+        leftColCord = (num, start) # same col, diff row
+        rightColCord = (num, totalRows - 1) # same col (but 2nd to last) but diff row 
+        bottomRowCord = (totalRows - 1, num) # same row (but 2nd to last) but diff cols
+        coordinates.extend( [firstRowCord, leftColCord, rightColCord, bottomRowCord])
+    # for num in range( start, end)
+    return coordinates
+
+# REFLECTIONS ---------------------------------------------------------------------------
+# These will reflect the coordinates of 1st quadrant of graph accross other quadrants 
+def reflectFourth(currentCords, totalRows, totalCols):
+    newCoords = reflectRight(currentCords, totalCols) #list
+    newCoords.extend( reflectBottom( ( newCoords + currentCords ), totalRows, totalCols) )
+    return newCoords
+
+def reflectRight(currentCords, totalCols): 
+    # maybe for the future, change this into 1 loop for better efficiency
+    # only runs once tho ^^
+    rightSideOfCord = []
+    for (row, col) in currentCords:
+        # reflect to the RIGHT 
+        newCol =  totalCols - col
+        rightSideOfCord.append( (row, newCol))
+    return rightSideOfCord
+
+def reflectBottom(currentCords, totalRows, totalCols):
+    otherHalfOfCord = []
+    # to mirror so its the same thing on the bottom 
+    for (row, col) in currentCords:
+        newRow = totalRows - row 
+        newCol = totalCols - col
+        otherHalfOfCord.append( (newRow, newCol) )
+    return otherHalfOfCord
+
+# CITATION: Bound check from snake on CS Academy - https://academy.cs.cmu.edu/exercise/13122
+# CHECK BOUNDS / IF LEGAL 
+def isOutOfBounds(app, newPlrRow, newPlrCol):
+    if ((newPlrRow < 0) or (newPlrRow >= app.board.rows) or
+        (newPlrCol < 0) or (newPlrCol >= app.board.cols)): # out of bounds 
+        return True
+    return False
+
+# CHECK IF OVERALL MOVE IS LEGAL
+def checkIfLegal(app): # @###################################### PUT INTOTPOAKSPODKWOPIAJSOIDJOIUWJAIOSJDOWJAOISDOAIJ
+    plrRow, plrCol = app.playerOne.cell
+    drow, dcol = app.playerOne.direction 
+    newPlrRow, newPlrCol = plrRow + drow, plrCol + dcol #player moves here -- new coordinates
+    #CHECK IF OUT OF BOUNDS and NOT TOUCHING ICE
+    return ( isLegalStep(app, newPlrRow, newPlrCol) and (app.playerOne.cell == app.playerOne.cell_goal) )
+
+def checkIfLegal_GreenOgre(app):
+    rowEnemy, colEnemy = app.greenOgre.cell
+    drow, dcol = app.greenOgre.direction 
+    newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
+    return isLegalStep(app, newPlrRow, newPlrCol)
+
+def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
+    outOfBounds =  isOutOfBounds(app, newPlrRow, newPlrCol)  
+    notOnIce =  (newPlrRow, newPlrCol) in app.iceCoordinates
+    notCreashingOntoWall =  (newPlrRow, newPlrCol) in app.wallCoordinates
+    return not ( outOfBounds or notOnIce or notCreashingOntoWall)
+
+
+## LEVEL TWO ##///////////////////////////////////////////////////////////////////////////////////////////////////
+
+def resetValuesToSTartLevel2(app):
+    app.wallCoordinates = None
+    setWallCoordinates(app.board, app)
+    app.iceCoordinates = []
+    app.gameOver = False
+    app.gameWon = False
+
+
     
-    def removeFruit(self, coordinates):
+    app.level_2 = Level(1, ['strawberry'])
+    
+    app.Level = app.level_2  
+
+def LevelTwo_redrawAll(app):
+    # Enviornment
+    drawSnowFloor(app)
+    drawWalls(app)
+    drawIce(app)
+
+    # Fruit ! 
+    # drawFruits_LevelTwo(app)
+
+    # Player
+    drawPlayer(app)
+    
+    # Enemy
+
+
+    # Board 
+    drawBoard(app.board)
+    drawBoardBorder(app.board)
+
+    # UI
+    drawLives(app)
+    drawFruitsCollected(app)
+    drawTime(app)
+
+# MONITOR USER INPUT 
+def LevelTwo_onKeyPress(app, key):
+    pressedKey(app, key)
+
+# MOVEMENT (DIFFERENT CELL) 
+def LevelTwo_onKeyHold(app, keys): # maybe make it so that u can only hold one of the keys down besides f 
+    heldKeys(app, keys)
+
+def LevelTwo_onStep(app):
+    if not app.gameOver:
         
-        fruit = self.fruitsInLevel[self.fruitIndex]
-        fruitObj = self.dictOfFruitCoords[fruit] 
-        listForFruit = fruitObj.listOfCoords
+        # player is able to move 
+        tweenPlayer(app)
+
+        # add time 
+        addTime(app)
+
+
+## LEVEL ONE  ##////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+##// LEVEL ONE//##
+def setLemonCoordinates_LvlOne(app): # This is for level 1 
+    lemonCoords = [ (4,3), (4,4), (5,3), (8,6)]
+    lemonCoords += reflectFourth(lemonCoords, app.board.rows -1, app.board.cols -1) 
+    # app.level_1.setDictOfFruits( 'lemon', lemonCoords)
+    return lemonCoords
+
+def setGrapeCoordinates_LvlOne(app):
+    grapesCoords = [ (2,2) , (2, 3), (3,2), (6,5)]
+    # grapesCoords += reflectBottom(grapesCoords, totalRows, totalCols )
+    # app.level_1.setDictOfFruits( 'grape', grapesCoords)
+    grapesCoords += reflectFourth(grapesCoords, app.board.rows -1, app.board.cols -1) 
+    return grapesCoords
+
+def setWallCoords_LevelOne(board, app ):
+    app.wallCoordinates.extend( setSquareCoordinates(7, board.rows - 7) )
+    updateRowDict(app.board, app.wallCoordinates)
+
+def setIceCoordinates_LevelOne(app):
+    app.iceCoordinates = setSquareCoordinates(1, app.board.rows - 1)
+    insideIce = [(5,4), (5,5), (5,6), (6,4), (7,4), (8,4)]
+    app.iceCoordinates += insideIce + reflectFourth(insideIce, app.board.rows -1, app.board.cols -1) 
+    updateRowDict(app.board, app.iceCoordinates)    
+    
+def setGreenOgre_LevelOne(app):
+    app.greenOgre = GreenOgre( (14, 2), (0, 1) )
+    app.greenOgre.start_setExactCoordinates( app.board)
+
+def drawFruits_LevelOne(app): # NOTE FOR LATER: update index if all fruits are collected 
+    """
+    # drawing all fruits at once
+    for fruit in app.level_1.dictOfFruitCoords:
+        listOFCoords = app.level_1.getCoordsOfFruit(fruit)
+        print( f"Coords for fruit -- {fruit} : {listOFCoords}")
         
-        print( listForFruit )
+        for (row, col) in listOFCoords: 
+            drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE  
+    """
+    fruit = app.level_1.fruitsInLevel[ app.level_1.fruitIndex ]
+    listOFCoords = app.level_1.getCoordsOfFruit(fruit)    
+    for (row, col) in listOFCoords: 
+        drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE 
+
+def drawGreenOgre_LevelOne(app):
+    # row, col = app.greenOgre.cell
+    # drawWorldImgs(app, row, col, app.greenOgreImg)
+    drawMovableSprite(app, app.greenOgre.x, app.greenOgre.y, app.greenOgreImg)
+
+def drawCompletionBoard_LevelOne(app):
+    height = 100
+    width = 200
+    x = app.board.boardWidth/2 - width/2
+    y = app.board.boardHeight/2 - height/2
+    drawRect(x , y, width, height, fill='white', border = 'black', borderWidth = 5)
+    mssg1 = 'CONGRATS!' if app.gameWon == True else 'YOU LOST'
+    mssg2 = 'You completed LEVEL ONE' if app.gameWon == True else ''
+    mssg3 = 'Click to continue to LEVEL TWO' if app.gameWon == True else ''
+
+    drawLabel( mssg1 , app.board.boardWidth/2 , app.board.boardHeight/2, size = height/4 )
+    drawLabel( mssg2 , app.board.boardWidth/2, app.board.boardHeight/2 + app.board.boardHeight/15, size = height/10 )
+    drawLabel( mssg3 , app.board.boardWidth/2, app.board.boardHeight - app.board.boardHeight/2.8 , size = height/10, fill = 'blue', border = 'black', borderWidth = .5 , bold = True)
+
+## RESTARTING :LEVEL ONE ///////   FIX !!!!!
+def restartLevel_1(app):
+    # reset fruits 
+    app.level_1 = Level(1, ['lemon', 'grape']) # makes dict
+    app.level_1.setDictOfFruits('lemon', setLemonCoordinates_LvlOne(app), app.lemonFruit)
+    app.level_1.setDictOfFruits('grape', setGrapeCoordinates_LvlOne(app), app.grapeFruit)
+    print('is the list not resetting??')
+
+    # reset ice
+    setIceCoordinates_LevelOne(app)
+    # reset enemies  
+    setGreenOgre_LevelOne(app)
+
+    # reset player LOCATION
+    app.playerOne.cell =  (3,3)
+    app.playerDirection = (0, -1)
+    app.playerOne.start_setPlayerExactCoordinates(app.board)
+
+
+## MAIN FUNCS ##
+def LevelOne_redrawAll(app):
+
+    # Enviornment
+    drawSnowFloor(app)
+    drawWalls(app)
+    drawIce(app)
+
+    # Fruit ! 
+    drawFruits_LevelOne(app)
+
+    # Player
+    drawPlayer(app)
+    
+    # Enemy
+    drawGreenOgre_LevelOne(app)
+
+    # Board 
+    drawBoard(app.board)
+    drawBoardBorder(app.board)
+
+    # UI
+    drawLives(app)
+    drawFruitsCollected(app)
+    drawTime(app)
+
+
+    # END
+    if app.gameOver == True:
+        drawCompletionBoard_LevelOne(app)
+
+# MONITOR USER INPUT 
+def LevelOne_onKeyPress(app, key):
+    if key == 'r': 
+        app.gameWon = True # DELETE THIS LATER - TESTING
+        app.gameOver = True # DELETE THIS LATER - TESTING
+        # restartLevel_1(app)
+    if key == '1': # this is for testing purposes 
+        print(app.playerOne.cell)
+
+    pressedKey(app, key)
+
+
+# MOVEMENT (DIFFERENT CELL) 
+def LevelOne_onKeyHold(app, keys): # maybe make it so that u can only hold one of the keys down besides f 
+    heldKeys(app, keys)
+    
+
+def LevelOne_onMouseRelease(app, mouseX, mouseY):
+    if app.gameOver and app.gameWon:
+        resetValuesToSTartLevel2(app) # reset values to prepare for second 
+        setActiveScreen('LevelTwo')
+
+def LevelOne_onStep(app):
+
+    checkIfPlrWasTouched_GreenOgre(app, 1)
+
+    if not app.gameOver:
+
+        # enemy walks around
+        app.greenOgre.takeStep(checkIfLegal_GreenOgre(app), app)
+        tweenGreenOgre(app)
         
-        index = listForFruit.index(coordinates)        
-        listForFruit.pop(index)
+        
+        # player is able to move 
+        tweenPlayer(app)
+
+        # add time 
+        addTime(app)
+        
+
+
+
+
+## CHAR SCREEN ##///////////////////////////////////////////////////////////////////////////////////////////////////
+
+# CITATION: CS Academy 3.3.7 Dogs and Cats : https://academy.cs.cmu.edu/exercise/13009
+def createButton(app):
+    wBtn = app.width/7
+    hBtn = app.height/15
+    xVal = wBtn 
+    for i in range(3):    
+        btn = drawRect(xVal, app.height - (2 * hBtn), wBtn, hBtn, fill='white', border = 'black', borderWidth =2 )
+        if i == 0:
+            name = 'Chocolate'
+        elif i == 1:
+            name = 'Vanilla'
+        elif i == 2:
+            name = 'Strawberry'
+        drawLabel(name, xVal + wBtn/2, app.height  - hBtn*1.5, font='black')
+        xVal += 2*wBtn
+
+def isClickingBtn(app, mouseX, mouseY):
+    wBtn = app.width/7
+    hBtn = app.height/15
+    xStart = wBtn
+    yStart = app.height- 2*hBtn
+    yEnd = app.height- hBtn
+    for index in range(3):
+        xCurr =  xStart +wBtn      
+        if  (xStart < mouseX < xCurr) and ( yStart < mouseY < yEnd): # 60 is the box's width
+            return index
+        xStart += 2* wBtn
+
+def customize_onMousePress(app, mouseX, mouseY):
+    index = isClickingBtn(app, mouseX, mouseY)
+    if index != None:
+        if index == 0:
+            app.playerOne.spriteChosen = app.chocolateImg
+        elif index == 1:
+            app.playerOne.spriteChosen = app.vanillaImg
+        elif index == 2:
+            app.playerOne.spriteChosen = app.strawberryImg
+        
+        app.Level = app.level_1
+        setActiveScreen('LevelOne')
+        
+def customize_redrawAll(app):
+    drawImage(app.chooseCharImg, 0, 0 , width = app.width, height = app.height )
+    createButton(app)
+   
+## MENU ## /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+def drawMenuImages(app):
+    drawImage(app.menuImages[app.menuImgIndex], 0, 0 , width = app.width, height = app.height )
+
+def menu_redrawAll(app):
+    drawMenuImages(app)
+
+def menu_onMouseRelease(app, mouseX, mouseY):
+    setActiveScreen('customize')
+
+def menu_onStep(app):
+    app.menuImgIndex = (app.menuImgIndex + 1) % len(app.menuImages)
+
+
+### START THE GAME // ###
+    
+def setPlayer(app):
+    controls = ['a', 'w', 'd', 's', 'f'] # LOGIC: planned to have controls like this 
+                                         # because was thinking of making them customizable
+    controls_option2 = [ 'left', 'up', 'right', 'down', 'space'] # not using this for now
+    app.playerOne = Player( controls, (3,3), (0, -1))
+    app.playerOne.start_setPlayerExactCoordinates(app.board)
+
+
+def onAppStart(app):
+    # Menu 
+    app.menuImgIndex = 0 
+    
+    # General Game
+    setBoard(app)
+    setWallCoordinates(app.board, app)
+    generateWorldImgs(app)
+    generateMenuImgs(app)
+    setPlayer(app)  
+    app.Level = None  
+    app.gameOver = False
+    app.gameWon = False
+    app.stepsPerTime = 30 # bc 30 per sec
+
+    # Level one 
+    setWallCoords_LevelOne(app.board, app )
+    restartLevel_1(app)    
+    # restartEntireGame(app)
+
+def main():
+    runAppWithScreens(initialScreen='menu') 
+
+main()
