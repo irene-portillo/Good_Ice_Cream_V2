@@ -88,11 +88,6 @@ def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
 
 ###########################
 
-
-def drawGreenOgre(app): # GREEN OGRE
-    row, col = self.cell
-    drawWorldImgs(app, row, col, selfImg)
-
 def drawBlueOgre(app): ########//////////////
     row, col = app.blueOgre.cell
     drawWorldImgs(app, row, col, app.blueOgreImg)
