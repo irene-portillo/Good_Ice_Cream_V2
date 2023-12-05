@@ -38,7 +38,6 @@ class Board:
         """
 
     def addColToDict(self, row, col):
-        print(row)
         if col not in self.rowDict[ str(row) ]: 
             self.rowDict[ str(row) ].append(col)
         else:
@@ -50,10 +49,12 @@ class Board:
             self.rowDict[ str(row) ].pop(index)
         else:
             print(f'col ({col}) was not found in list for {row}..')
+    
     def printRowDict(self):
         for key in range(len(self.rowDict)):
             print(f'{key}: {self.rowDict[ str(key) ]}')
 
+    
 print('created a BOARD class ! ') 
 
 """ OLD CODE, del after done 
