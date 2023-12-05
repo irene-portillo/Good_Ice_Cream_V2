@@ -1,6 +1,5 @@
-# from GameV4_1 import 
-
 # Player class
+
 class Player: 
     def __init__(self, controlsList, cell, direction): 
         self.controlsList = controlsList 
@@ -110,6 +109,7 @@ class Player:
         drow, dcol = self.direction 
         newPlrRow, newPlrCol = plrRow + drow, plrCol + dcol #player moves here -- new coordinates
         # #CHECK IF OUT OF BOUNDS and NOT TOUCHING ICE
+                
         if isLegal:
             #actually move
             self.tweenSprite(plrRow, plrCol, newPlrRow, newPlrCol, app.board) 
