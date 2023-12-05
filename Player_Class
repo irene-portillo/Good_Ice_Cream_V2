@@ -1,495 +1,162 @@
-# trying to make game using clases
-# Test File now , split into classes  
-from cmu_graphics import * 
-# Modules from lecture used to import images 
+# from GameV4_1 import 
 
-from PIL import Image
-import os, pathlib
-# My classes
-from Player_Class import Player 
-from Enemy_Class import GreenOgre
-from Board_Class import Board
-from Level_Class import Level
+# Player class
+class Player: 
+    def __init__(self, controlsList, cell, direction): 
+        self.controlsList = controlsList 
+        # set cell location 
+        self.cell = cell  
+        self.cell_goal = cell # NEW 
+        self.direction = direction # NEW
+        self.isMoving = False 
+        # other characteristics 
+        self.fruitsCollected = 0 
+        self.lives = 3
+        self.spriteChosen = None
+        self.time = 0
 
-## GENERAL GAME ASSESTS ## /////////////////////////////////////////////////////////////////////////////
-## IMAGES ## --------------------------------------------------------------------------
- 
-# CITATION: basiclPILMethods.py Demo by CMU 15-112 found on Piazza - https://piazza.com/class/lkq6ivek5cg1bc/post/2147 
-def openImage(fileName):
-    return Image.open(os.path.join(pathlib.Path(__file__).parent,fileName))
+    def __repr__(self):
+        return 'yea ig this is a player'
+    def chooseSprite(self, sprite):
+        self.spriteChosen = sprite
 
-# CREATE ALL WORLD IMGS
-def generateWorldImgs(app):
-    # CITATION: https://www.spriters-resource.com/resources/sheets/126/129363.png?updated=1586740764 (cropped each out)
-    # - for all ice creams
-    app.vanillaImg = generateSingleImg(app, "SingleImages/vanilla_Transparent.png")    
-    app.chocolateImg = generateSingleImg(app, "SingleImages/chocolate_IceCream.png")
-    app.strawberryImg = generateSingleImg(app, "SingleImages/strawberry_IceCream.png")
-    # CITATION: https://www.spriters-resource.com/resources/sheets/136/138810.png?updated=1599234272
-    app.greenOgreImg = generateSingleImg(app, "SingleImages/greenOgre.png" )
-    # CITATION: https://www.spriters-resource.com/resources/sheets/190/193477.png?updated=1678723693
-    app.blueOgreImg = generateSingleImg(app, "SingleImages/blueOgre.png" )
 
-    # CITATION: https://static.wikia.nocookie.net/nitrome/images/b/b1/Ice_Block.png/revision/latest/thumbnail/width/360/height/360?cb=20121214040050
-    app.iceBlockImg = generateSingleImg(app, "SingleImages/iceBlock_Transparent.png")
-    # CITATION: https://static.wikia.nocookie.net/nitrome/images/7/72/BIC_All_Fruits.png/revision/latest/thumbnail/width/360/height/360?cb=20131221133509
-    # - for all fruits
-    app.lemonFruit = generateSingleImg(app, "SingleImages/lemon.png")
-    app.grapeFruit = generateSingleImg(app, "SingleImages/grapes.png")
-    # CITATION: https://www.spriters-resource.com/resources/sheets/183/186433.png?updated=1667962706
-    # - for all extras
-    app.clockImg = generateSingleImg(app, "SingleImages/singleClock.png")
-    app.fruitContainer_Left = generateSingleImg(app, "Images/Extras/fruitContainer_Left.png")
-    app.fruitContainer_MiddleImg = generateSingleImg(app, "Images/Extras/fruitContainer_Middle.png")
-    app.fruitContainer_RightImg = generateSingleImg(app, "Images/Extras/fruitContainer_Right.png")
-    # CITATION: https://poki.com/en/g/bad-ice-cream?campaign=14726801018&adgroup=126978578349&extensionid=&targetid=kwd-5566849837&location=9005925&matchtype=e&network=g&device=c&devicemodel=&creative=583090060249&keyword=bad%20ice%20cream&placement=&target=&gclid=CjwKCAiAvJarBhA1EiwAGgZl0LihrDH9JJxw4csden6dycdQH5nRVLVdsqh-Zz5Oe_lDRkcSs9XfQRoCPWEQAvD_BwE
-    # - screen shots from the 'Bad Ice Cream' game
-    # - then pieced together with Pixlr
-    #   CITATION: https://pixlr.com/express/
-    app.wallImage = generateSingleImg(app, "Images/worldImages/wallBlock.png")
-    app.backgroundSnow = generateSingleImg(app, "Images/worldImages/snowBackground_Square.png")
-    app.chooseCharImg = generateSingleImg(app, "Images/chooseChar_single.png")
+    def start_setPlayerExactCoordinates(self, board):
+        startingX, startingY = self.cell
+        # set x and y's for tweening 
+        self.x, self.y = board.getCellLeftTop(startingX, startingY )
+        self.x_goal, self.y_Goal = board.getCellLeftTop(startingX, startingY)
 
-    # CITATION: https://cdn.pixabay.com/photo/2017/09/23/16/33/pixel-heart-2779422_640.png
-    app.livesImg = generateSingleImg(app, "Images/heart_1.png")
+    # BEHAVIOR 
+    def collectFruit(self, level, newPlrRow, newPlrCol): # USING 
+        # add fruits here and unadd from fruits in MAP/WORLD'
+        level.removeFruit((newPlrRow, newPlrCol))
+        self.fruitsCollected += 1 
+        print(f'Cool, collected a fruit ! Currently have {self.fruitsCollected} fruit(s) ')
 
-    # CITATION: https://art.pixilart.com/661116b177fe475.png  
-    app.fruitsCollectedImg = generateSingleImg(app, "Images/fruitsCollected.png")
+    def setPlayerCoordinates_Goal(self, goalX, goalY):
+        self.x_goal, self.y_Goal = goalX, goalY
+        
 
-# For MENU -- kind of like a GIF
-def generateMenuImgs(app):
-    # CITATION: https://poki.com/en/g/bad-ice-cream?campaign=14726801018&adgroup=126978578349&extensionid=&targetid=kwd-5566849837&location=9005925&matchtype=e&network=g&device=c&devicemodel=&creative=583090060249&keyword=bad%20ice%20cream&placement=&target=&gclid=CjwKCAiAvJarBhA1EiwAGgZl0LihrDH9JJxw4csden6dycdQH5nRVLVdsqh-Zz5Oe_lDRkcSs9XfQRoCPWEQAvD_BwE
-    # - screen shots from the 'Bad Ice Cream' game
-    app.menuImages = []
-    for i in range(1, 7): # in my 'Menu Screen' folder, they're name from 1 to 6 
-        image = generateSingleImg(app, f"Images/MenuScreen/{i}.png")
-        app.menuImages.append( image )
+    def loseLife(self):
+        self.lives -= 1
 
-# CREATE SINGLE IMG
-def generateSingleImg(app, directory):
-    # image = Image.open(directory)
-    image = openImage(directory)
-    return CMUImage(image) # make it a CMU image
+    # ICE 
+    def createOrDestroyIce_Col(self, app, start, end, col, increment): # helper func - mutating
+        isCreatingIce = False if (start, col ) in app.iceCoordinates else True
+        #DIFF
+        print(self.isMoving)
+        if self.isMoving == True:
+            print('####################################################################################')
+            # extraSinceMoving = 1 if self.direction == else -1 
+            start += increment
+        for rowNum in range (start, end, increment):
+            if isCreatingIce == True:
+                if self.isIceCollidingWithAnotherObj(app, rowNum, col):
+                    return                 
+                app.iceCoordinates.append( (rowNum, col))
+            else:
+                if (rowNum, col) not in app.iceCoordinates or ( (rowNum, col) == app.greenOgre.cell ):
+                    return
+                iceIndex = app.iceCoordinates.index( ( rowNum, col ) )
+                app.iceCoordinates.pop(iceIndex)
+    
+    def createOrDestroyIce_Row(self, app, start, end, row, increment): #  helper func - mutating
+        
+        print('entered this func')
+        isCreatingIce = False if (row, start ) in app.iceCoordinates else True
 
-# DRAW THE IMAGES
-def drawWorldImgs(app, row, col, sprite):
-    cellLeft, cellTop = app.board.getCellLeftTop(row, col)
-    cellWidth, cellHeight = app.board.getCellSize()
-    drawImage(sprite, cellLeft, cellTop, width = cellWidth, height = cellHeight)
-
-def drawWorldLabel(app, row, col, text):
-    cellLeft, cellTop = app.board.getCellLeftTop(row, col)
-    cellWidth, cellHeight = app.board.getCellSize()
-    drawLabel(text, cellLeft + cellWidth/2, cellTop + cellHeight/2, fill='black', border=None, borderWidth=2, size = 15)
-          #size=12, font='arial',
-        #   bold=False, italic=False,
-        #   fill='black', border=None, borderWidth=2,
-        #   opacity=100, rotateAngle=0, align='center')
-
-def drawSnowFloor(app):
-    x, y = app.board.getCellSize() # did this to seperate the variables 
-    lenOfSqr = x * app.board.rows 
-    drawImage(app.backgroundSnow, 0, 0 , width = lenOfSqr, height = lenOfSqr )
-
-def drawIce(app):
-    for (row, col) in app.iceCoordinates:
-        drawWorldImgs(app, row, col, app.iceBlockImg) # DRAW ICE HERE 
-
-def drawLives(app):
-    drawWorldImgs(app, 0, 16, app.livesImg) 
-    drawWorldLabel(app, 0, 17, str(app.playerOne.lives))
-
-def drawFruitsCollected(app):
-    drawWorldImgs(app, 0, 13, app.fruitsCollectedImg) 
-    drawWorldLabel(app, 0, 14, str(app.playerOne.fruitsCollected))
-
-## PLAYER ---------------------------------------------------------------------
-def drawPlayer(app):
-    drawMovableSprite(app, app.playerOne.x, app.playerOne.y, app.playerOne.spriteChosen)
-
-def drawMovableSprite(app, x, y, sprite):
-    cellWidth, cellHeight = app.board.getCellSize()
-    drawImage(sprite, x, y, width = cellWidth, height = cellHeight )
-
-def playerTakeStep(app, direction):
-    app.playerOne.direction = direction
-    app.playerOne.takeStep(app, checkIfLegal(app), app.Level)
-
-def tweenPlayer(app):
-    #  TWEEN PLAYER  
-    if app.playerOne.x != app.playerOne.x_goal: # press 'a' or 'd' to check this or 
-        app.playerOne.tweenXValues()
-    elif app.playerOne.y != app.playerOne.y_Goal:
-        app.playerOne.tweenYValues()
-    else: # both x and y are equal
-        # print('at goal')
-        app.playerOne.isMoving = False
-        app.playerOne.cell = app.playerOne.cell_goal # set the cell
-
-def tweenGreenOgre(app):
-    #  TWEEN PLAYER  
-    if app.greenOgre.x != app.greenOgre.x_goal: # press 'a' or 'd' to check this or 
-        app.greenOgre.tweenXValues()
-    elif app.greenOgre.y != app.greenOgre.y_Goal:
-        app.greenOgre.tweenYValues()
-    else: # both x and y are equal
-        # print('at goal')
-        app.greenOgre.cell = app.greenOgre.cell_goal # set the cell
-
-## CREATING THE BOARD ## -------------------------------------------------------------
-def setBoard(app):
-    boardWidth = app.width - (app.width / 20)
-    app.board = Board( 18, 18, 1 , 0, 0, boardWidth, app.height) # ( rows, cols, cellBoarderWidth, boardLeft, boardTop, boardWidth, boardHeight
-    print('done setting board ')
-
-# CITATION: BOARD from snake on CS Academy - https://academy.cs.cmu.edu/exercise/13122
-def drawBoard(board):
-    for row in range(board.rows):
-        for col in range(board.cols):
-            drawCell(board, row, col)
+        if self.isMoving == True:
+            start += increment
             
-def drawBoardBorder(board):
-  # Draw the board outline (with double-thickness):
-  drawRect(board.boardLeft, board.boardTop, board.boardHeight, board.boardHeight,
-           fill=None, border='black',
-           borderWidth=2*board.cellBoarderWidth)
-
-def drawCell(board, row, col): 
-    cellLeft, cellTop = board.getCellLeftTop( row, col)
-    cellWidth, cellHeight = board.getCellSize()
-    drawRect(cellLeft, cellTop, cellWidth, cellHeight,
-             fill=None, border='black',
-             borderWidth=board.cellBoarderWidth)
-
-## CREATING THE WALLS ## -------------------------------------------------------------
-
-def setWallCoordinates(board, app):
-    app.wallCoordinates = setSquareCoordinates(0, board.rows - 0)
-    updateRowDict(app.board, app.wallCoordinates)    
-
-def drawWalls(app):
-    for (row, col) in app.wallCoordinates:
-        drawWorldImgs(app, row, col, app.wallImage) # DRAW ICE HERE
-
-## HELPER FUNCTIONS ##
-
-def updateRowDict(board, coordinates):
-    for row, col in coordinates:
-        board.addColToDict(row, col)
-    # board.printRowDict()
-
-def setSquareCoordinates(start, totalRows):
-    coordinates = [] 
-    for num in range(start, totalRows):
-        firstRowCord = (start, num) # same row, dif column'
-        leftColCord = (num, start) # same col, diff row
-        rightColCord = (num, totalRows - 1) # same col (but 2nd to last) but diff row 
-        bottomRowCord = (totalRows - 1, num) # same row (but 2nd to last) but diff cols
-        coordinates.extend( [firstRowCord, leftColCord, rightColCord, bottomRowCord])
-    # for num in range( start, end)
-    return coordinates
-
-# REFLECTIONS ---------------------------------------------------------------------------
-# These will reflect the coordinates of 1st quadrant of graph accross other quadrants 
-def reflectFourth(currentCords, totalRows, totalCols):
-    newCoords = reflectRight(currentCords, totalCols) #list
-    newCoords.extend( reflectBottom( ( newCoords + currentCords ), totalRows, totalCols) )
-    return newCoords
-
-def reflectRight(currentCords, totalCols): 
-    # maybe for the future, change this into 1 loop for better efficiency
-    # only runs once tho ^^
-    rightSideOfCord = []
-    for (row, col) in currentCords:
-        # reflect to the RIGHT 
-        newCol =  totalCols - col
-        rightSideOfCord.append( (row, newCol))
-    return rightSideOfCord
-
-def reflectBottom(currentCords, totalRows, totalCols):
-    otherHalfOfCord = []
-    # to mirror so its the same thing on the bottom 
-    for (row, col) in currentCords:
-        newRow = totalRows - row 
-        newCol = totalCols - col
-        otherHalfOfCord.append( (newRow, newCol) )
-    return otherHalfOfCord
-
-# CITATION: Bound check from snake on CS Academy - https://academy.cs.cmu.edu/exercise/13122
-# CHECK BOUNDS / IF LEGAL 
-def isOutOfBounds(app, newPlrRow, newPlrCol):
-    if ((newPlrRow < 0) or (newPlrRow >= app.board.rows) or
-        (newPlrCol < 0) or (newPlrCol >= app.board.cols)): # out of bounds 
-        return True
-    return False
-
-# CHECK IF OVERALL MOVE IS LEGAL
-def checkIfLegal(app): # @###################################### PUT INTOTPOAKSPODKWOPIAJSOIDJOIUWJAIOSJDOWJAOISDOAIJ
-    plrRow, plrCol = app.playerOne.cell
-    drow, dcol = app.playerOne.direction 
-    newPlrRow, newPlrCol = plrRow + drow, plrCol + dcol #player moves here -- new coordinates
-    #CHECK IF OUT OF BOUNDS and NOT TOUCHING ICE
-    return ( isLegalStep(app, newPlrRow, newPlrCol) and (app.playerOne.cell == app.playerOne.cell_goal) )
-
-def checkIfLegal_GreenOgre(app):
-    rowEnemy, colEnemy = app.greenOgre.cell
-    drow, dcol = app.greenOgre.direction 
-    newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
-    return isLegalStep(app, newPlrRow, newPlrCol)
-
-def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
-    outOfBounds =  isOutOfBounds(app, newPlrRow, newPlrCol)  
-    notOnIce =  (newPlrRow, newPlrCol) in app.iceCoordinates
-    notCreashingOntoWall =  (newPlrRow, newPlrCol) in app.wallCoordinates
-    return not ( outOfBounds or notOnIce or notCreashingOntoWall)
-
-## LEVEL ONE  ##///////////////////////////////////////////////////////////////////////////
-
-##// LEVEL ONE//##
-def setLemonCoordinates_LvlOne(app): # This is for level 1 
-    lemonCoords = [ (4,3), (4,4), (5,3), (8,6)]
-    lemonCoords += reflectFourth(lemonCoords, app.board.rows -1, app.board.cols -1) 
-    # app.level_1.setDictOfFruits( 'lemon', lemonCoords)
-    return lemonCoords
-
-def setGrapeCoordinates_LvlOne(app):
-    grapesCoords = [ (2,2) , (2, 3), (3,2), (6,5)]
-    # grapesCoords += reflectBottom(grapesCoords, totalRows, totalCols )
-    # app.level_1.setDictOfFruits( 'grape', grapesCoords)
-    grapesCoords += reflectFourth(grapesCoords, app.board.rows -1, app.board.cols -1) 
-    return grapesCoords
-
-def setWallCoords_LevelOne(board, app ):
-    app.wallCoordinates.extend( setSquareCoordinates(7, board.rows - 7) )
-    updateRowDict(app.board, app.wallCoordinates)
-
-def setIceCoordinates_LevelOne(app):
-    app.iceCoordinates = setSquareCoordinates(1, app.board.rows - 1)
-    insideIce = [(5,4), (5,5), (5,6), (6,4), (7,4), (8,4)]
-    app.iceCoordinates += insideIce + reflectFourth(insideIce, app.board.rows -1, app.board.cols -1) 
-    updateRowDict(app.board, app.iceCoordinates)    
-    
-def setGreenOgre_LevelOne(app):
-    app.greenOgre = GreenOgre( (14, 2), (0, 1) )
-    app.greenOgre.start_setExactCoordinates( app.board)
-
-
-def drawFruits_LevelOne(app): # NOTE FOR LATER: update index if all fruits are collected 
-    """
-    # drawing all fruits at once
-    for fruit in app.level_1.dictOfFruitCoords:
-        listOFCoords = app.level_1.getCoordsOfFruit(fruit)
-        print( f"Coords for fruit -- {fruit} : {listOFCoords}")
-        
-        for (row, col) in listOFCoords: 
-            drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE  
-    """
-    fruit = app.level_1.fruitsInLevel[ app.level_1.fruitIndex ]
-    listOFCoords = app.level_1.getCoordsOfFruit(fruit)    
-    for (row, col) in listOFCoords: 
-        drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE 
-
-def drawGreenOgre_LevelOne(app):
-    row, col = app.greenOgre.cell
-    drawWorldImgs(app, row, col, app.greenOgreImg)
-
-## MAIN FUNCS ##
-def LevelOne_redrawAll(app):
-
-    # Enviornment
-    drawSnowFloor(app)
-    drawWalls(app)
-    drawIce(app)
-
-    # Fruit ! 
-    drawFruits_LevelOne(app)
-
-    # Player
-    drawPlayer(app)
-    
-    # Enemy
-    drawGreenOgre_LevelOne(app)
-
-    # Board 
-    drawBoard(app.board)
-    drawBoardBorder(app.board)
-
-    # UI
-    drawLives(app)
-    drawFruitsCollected(app)
-
-
-# CITATION: MOVEMENT LOGIC derived from snake on CS Academy - https://academy.cs.cmu.edu/exercise/13122
-# MONITOR USER INPUT 
-def LevelOne_onKeyPress(app, key):
-    if key == 'r': 
-        restartLevel_1(app)
-    #     restartEntireGame(app)
-
-    if key == '1': # this is for testing purposes 
-        print(app.playerOne.cell)
-
-    if not app.gameOver:
-        # MOVEMENT (TURNING) 
-        if key == app.playerOne.controlsList[1]: # UP 
-            app.playerOne.direction = (-1, 0) #drow, dcol
-        elif key == app.playerOne.controlsList[3]: # DOWN 
-            app.playerOne.direction = (1, 0)
-        elif key == app.playerOne.controlsList[0]: # LEFT
-            app.playerOne.direction = (0, -1)
-        elif key == app.playerOne.controlsList[2]: # RIGHT
-            app.playerOne.direction = (0, 1)
-        # CREATE/DESTROY ICE
-        if key == app.playerOne.controlsList[4]: 
-            app.playerOne.manageIce(app)
-            # print(app.iceCoordinates)
-            # updateRowDict(app.board, app.iceCoordinates) 
-
-# MOVEMENT (DIFFERENT CELL) 
-def LevelOne_onKeyHold(app, keys): # maybe make it so that u can only hold one of the keys down besides f 
-    if not app.gameOver: 
-        if app.playerOne.controlsList[1] in keys : # UP    
-            playerTakeStep(app, (-1, 0)) # # drow, dcol
-        elif app.playerOne.controlsList[3] in keys: # DOWN
-            playerTakeStep(app, (1, 0))
-        elif app.playerOne.controlsList[0] in keys: # LEFT
-            playerTakeStep(app, (0, -1))
-        elif app.playerOne.controlsList[2] in keys: # RIGHT 
-            playerTakeStep(app, (0, 1) )
-    pass
-    
-
-def LevelOne_onStep(app):
-    if not app.gameOver:
-        # enemy walks around
-        app.greenOgre.takeStep(checkIfLegal_GreenOgre(app), app)
-        tweenGreenOgre(app)
-        
-        
-        # player is able to move 
-        tweenPlayer(app)
-
-
-## RESTARTING :LEVEL ONE ///////   FIX !!!!!
-def restartLevel_1(app):
-    # reset fruits 
-    app.level_1 = Level(1, ['lemon', 'grape']) # makes dict
-    app.level_1.setDictOfFruits('lemon', setLemonCoordinates_LvlOne(app), app.lemonFruit)
-    app.level_1.setDictOfFruits('grape', setGrapeCoordinates_LvlOne(app), app.grapeFruit)
-    print('is the list not resetting??')
-
-    # reset ice
-    setIceCoordinates_LevelOne(app)
-    # reset enemies  
-    setGreenOgre_LevelOne(app)
-
-    # reset player LOCATION
-    app.playerOne.cell =  (3,3)
-    app.playerDirection = (0, -1)
-    app.playerOne.start_setPlayerExactCoordinates(app.board)
-
-
-## CHAR SCREEN ##///////////////////////////////////////////////////////////////////////////////////////////////////
-
-# CITATION: CS Academy 3.3.7 Dogs and Cats : https://academy.cs.cmu.edu/exercise/13009
-def createButton(app):
-    wBtn = app.width/7
-    hBtn = app.height/15
-    xVal = wBtn 
-    for i in range(3):    
-        btn = drawRect(xVal, app.height - (2 * hBtn), wBtn, hBtn, fill='white', border = 'black', borderWidth =2 )
-        if i == 0:
-            name = 'Chocolate'
-        elif i == 1:
-            name = 'Vanilla'
-        elif i == 2:
-            name = 'Strawberry'
-        drawLabel(name, xVal + wBtn/2, app.height  - hBtn*1.5, font='black')
-        xVal += 2*wBtn
-
-def isClickingBtn(app, mouseX, mouseY):
-    wBtn = app.width/7
-    hBtn = app.height/15
-    xStart = wBtn
-    yStart = app.height- 2*hBtn
-    yEnd = app.height- hBtn
-    for index in range(3):
-        xCurr =  xStart +wBtn      
-        if  (xStart < mouseX < xCurr) and ( yStart < mouseY < yEnd): # 60 is the box's width
-            return index
-        xStart += 2* wBtn
-
-def customize_onMousePress(app, mouseX, mouseY):
-    index = isClickingBtn(app, mouseX, mouseY)
-    if index != None:
-        if index == 0:
-            app.playerOne.spriteChosen = app.chocolateImg
-        elif index == 1:
-            app.playerOne.spriteChosen = app.vanillaImg
-        elif index == 2:
-            app.playerOne.spriteChosen = app.strawberryImg
-        
-        app.Level = app.level_1
-        setActiveScreen('LevelOne')
-        
-def customize_redrawAll(app):
-    drawImage(app.chooseCharImg, 0, 0 , width = app.width, height = app.height )
-    createButton(app)
-   
-## MENU ## //////////////////////////////////////////////////////////////////////////////////////////
-def drawMenuImages(app):
-    drawImage(app.menuImages[app.menuImgIndex], 0, 0 , width = app.width, height = app.height )
-
-def menu_redrawAll(app):
-    drawMenuImages(app)
-
-def menu_onMouseRelease(app, mouseX, mouseY):
-    setActiveScreen('customize')
-
-def menu_onStep(app):
-    app.menuImgIndex = (app.menuImgIndex + 1) % len(app.menuImages)
-
-
-### START THE GAME // ###
-
-# OVERALL GAME - SET VALUES 
-def restartEntireGame(app):    
-    # app.stepsPerTime = 0
-    # restartLevel(app)
-    pass
-
+        for colNum in range (start, end, increment):
+            if isCreatingIce == True:
+                if self.isIceCollidingWithAnotherObj(app, row, colNum): # crossed ice
+                    return                 
+                app.iceCoordinates.append( (row, colNum))
+            else:
+                if (row, colNum) not in app.iceCoordinates or ( (row, colNum) == app.greenOgre.cell ):
+                    return                 
+                iceIndex = app.iceCoordinates.index( ( row, colNum ) )
+                app.iceCoordinates.pop(iceIndex)
 
     
-def setPlayer(app):
-    controls = ['a', 'w', 'd', 's', 'f'] # LOGIC: planned to have controls like this 
-                                         # because was thinking of making them customizable
-    controls_option2 = [ 'left', 'up', 'right', 'down', 'space'] # not using this for now
-    app.playerOne = Player( controls, (3,3), (0, -1))
-    app.playerOne.start_setPlayerExactCoordinates(app.board)
+    def isIceCollidingWithAnotherObj(self, app, row, col):
+        return ( (row, col) in app.iceCoordinates ) or ( (row, col) == app.greenOgre.cell ) or  ( (row, col) in app.wallCoordinates )
+
+    def manageIce(self, app):#drow, dcol
+        row, col = self.cell
 
 
-def onAppStart(app):
-    # Menu 
-    app.menuImgIndex = 0 
+        # CHECKING COL - row is changing 
+        if self.direction == (-1, 0): # UP    
+            self.createOrDestroyIce_Col(app, row-1, -1, col, -1)
+        elif self.direction == (1, 0): # DOWN
+            self.createOrDestroyIce_Col(app, row+1, app.board.rows, col, 1)
+        # CHECKING ROW - column is changing 
+        elif self.direction == (0, -1): # LEFT 
+            self.createOrDestroyIce_Row(app, col-1, -1, row, -1)
+
+        elif self.direction == (0, 1): # RIGHT 
+            self.createOrDestroyIce_Row(app, col+1, app.board.cols, row, 1)
     
-    # General Game
-    setBoard(app)
-    setWallCoordinates(app.board, app)
-    generateWorldImgs(app)
-    generateMenuImgs(app)
-    setPlayer(app)  
-    app.Level = None  
-    app.gameOver = False
-    app.gameWon = False
+    #  MOVE
+    #  PLAYER WALKS TO DIF CELL -- collisions for player should be good now
+    def takeStep(self, app, isLegal, level):
+        fruit = app.level_1.fruitsInLevel[app.level_1.fruitIndex]
+        fruitCoordinates = app.level_1.getCoordsOfFruit(fruit)
+
+        plrRow, plrCol = self.cell
+        drow, dcol = self.direction 
+        newPlrRow, newPlrCol = plrRow + drow, plrCol + dcol #player moves here -- new coordinates
+        # #CHECK IF OUT OF BOUNDS and NOT TOUCHING ICE
+        if isLegal:
+            #actually move
+            self.tweenSprite(plrRow, plrCol, newPlrRow, newPlrCol, app.board) 
+            # DEALING WITH FRUITS /////////////////////////////
+            if (newPlrRow, newPlrCol) in fruitCoordinates  :
+                #fruit was eaten 
+                if len(fruitCoordinates) > 0: 
+                    # you still have somewhat to go, there's stil fruits on the map
+                    self.collectFruit(level, newPlrRow, newPlrCol)
+            elif len(fruitCoordinates) == 0:
+            
+                if app.level_1.fruitIndex + 1 == len(app.level_1.fruitsInLevel):
+                    # collected all fruits!
+                    app.gameWon = True
+                    app.gameOver = True
+                    print('all fruit were collected! was won! game won??? o_o')
+                else:
+                    app.level_1.fruitIndex += 1
 
 
-    # Level one 
-    setWallCoords_LevelOne(app.board, app )
-    restartLevel_1(app)    
-    # restart , not sure where to put this
-    restartEntireGame(app)
+    def tweenSprite(self, currRow, currCol, newRow, newCol, board): 
+        currX, currY = board.getCellLeftTop(currRow, currCol)
+        goalX, goalY = board.getCellLeftTop(newRow, newCol)
+        if (currX != goalX ) or (currY != goalY):
+            # print('Should be tweening bc x != x or vise versa y')
+            self.setPlayerCoordinates_Goal(goalX, goalY) ## this makes onstep() work 
+            self.cell_goal = (newRow, newCol)
 
-def main():
-    runAppWithScreens(initialScreen='menu')
+    def tweenXValues(self):
+        self.isMoving = True
+        if self.x > self.x_goal:
+            self.x -= 5
+        elif self.x < self.x_goal:
+            self.x += 5
+        if int(self.x)// 10 == int(self.x_goal)// 10: 
+            # print('both should be equal ')
+            self.x = self.x_goal
 
-main()
+    def tweenYValues(self):
+        self.isMoving = True
+        if self.y > self.y_Goal:
+            self.y -= 5
+        elif self.y < self.y_Goal:
+            self.y += 5
+        if int(self.y) // 10 == int(self.y_Goal) // 10: 
+            # print('both should be equal ')
+            self.y = self.y_Goal
+
+
+print('created a PLAYER class !')
