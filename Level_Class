@@ -1,0 +1,45 @@
+class Fruit:
+    def __init__(self, listOfCoords, Image):
+        self.listOfCoords= listOfCoords
+        self.Image = Image 
+
+# Level One 
+class Level:
+    def __init__(self, levelNum, fruitsInLevel):
+        self.levelNum = levelNum
+        self.fruitsInLevel = fruitsInLevel
+        self.fruitIndex = 0
+
+
+        self.dictOfFruitCoords = dict()
+        for fruit in fruitsInLevel:
+            self.dictOfFruitCoords[fruit] = None
+
+    def __repr__(self):
+        return f'level {self.levelNum}, dict of fruits: {self.dictOfFruitCoords}'
+
+    def setDictOfFruits(self, fruit, listOfCoords, Image):
+        if fruit in self.dictOfFruitCoords:
+            # print('this should have been made..')
+            self.dictOfFruitCoords[fruit] = Fruit( listOfCoords, Image)
+        else:
+            print('Fruit was not found')
+
+    def getCoordsOfFruit(self, fruit):
+        if fruit in self.dictOfFruitCoords:
+            return self.dictOfFruitCoords[fruit].listOfCoords
+    
+    def getImageOfFruit(self, fruit):
+        if fruit in self.dictOfFruitCoords:
+            return self.dictOfFruitCoords[fruit].Image
+
+
+LevelOne = Level(1, ['lemons', 'grapes'] )
+
+LevelOne.setDictOfFruits('lemons', [1,2,3] , 'pretend this is an image')
+print( LevelOne.dictOfFruitCoords)
+
+
+print()
+print( LevelOne.getCoordsOfFruit('lemons'))
+# print( LevelOne.dictOfFruitCoords['lemons'] )
