@@ -32,14 +32,25 @@ class Level:
     def getImageOfFruit(self, fruit):
         if fruit in self.dictOfFruitCoords:
             return self.dictOfFruitCoords[fruit].Image
+    
+    def removeFruit(self, coordinates):
+        
+        fruit = self.fruitsInLevel[self.fruitIndex]
+        fruitObj = self.dictOfFruitCoords[fruit] 
+        listForFruit = fruitObj.listOfCoords
+        
+        print( listForFruit )
+        
+        index = listForFruit.index(coordinates)        
+        listForFruit.pop(index)
 
+# for testing
+# LevelOne = Level(1, ['lemons', 'grapes'] )
 
-LevelOne = Level(1, ['lemons', 'grapes'] )
+# LevelOne.setDictOfFruits('lemons', [1,2,3] , 'pretend this is an image')
+# print( LevelOne.dictOfFruitCoords)
 
-LevelOne.setDictOfFruits('lemons', [1,2,3] , 'pretend this is an image')
-print( LevelOne.dictOfFruitCoords)
+# LevelOne.removeFruit( 2 )
 
-
-print()
-print( LevelOne.getCoordsOfFruit('lemons'))
-# print( LevelOne.dictOfFruitCoords['lemons'] )
+# print()
+# print( LevelOne.getCoordsOfFruit('lemons'))
