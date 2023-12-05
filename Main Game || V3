@@ -656,4 +656,4 @@ def onAppStart(app):
 def main():
     runAppWithScreens(initialScreen='menu') 
 
-main()
+main() 
