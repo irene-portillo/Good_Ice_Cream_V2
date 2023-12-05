@@ -2,8 +2,99 @@ class Enemy:
     def __init__(self, cell, direction ):
         self.cell = cell
         self.direction = direction # going down 
-    # MOVEMENT is on onStep()
 
+## GREEN OGRE 
+class GreenOgre:
+    def __init__(self, cell, direction ):
+        self.cell = cell
+        self.cell_goal = cell
+        self.direction = direction # going down 
+        print(' green ogre was set')
+        print( self.cell, self.cell_goal)
+        
+        
+    def takeStep(self, app): # MOVEMENT is on onStep()
+        
+
+        rowEnemy, colEnemy = self.cell
+        drow, dcol = self.direction 
+        newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
+
+        isLegal, var2 = self.takeStep_Helper( newPlrRow, newPlrCol, app)
+
+        if isLegal:
+            self.tweenSprite(rowEnemy, colEnemy, newPlrRow, newPlrCol, app.board) ### ##########################################
+            print('tuple was legal')
+            # self.cell_goal = var2
+        # else:
+            # self.direction = var2
+
+    # ENEMY TAKES STEPS / MOVES CELLS - think this is fine, works same as game 
+    def takeStep_Helper(self, isLegal, newPlrRow, newPlrCol, app):
+        #                    [ DOWN,   RIGHT, UP,  LEFT]  
+        possibleDirections = [(1, 0),  (0, 1), (-1, 0),  (0, -1)]
+        
+        index =  possibleDirections.index( self.direction ) 
+        rowEnemy, colEnemy = self.cell
+        drow, dcol = self.direction 
+        newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
+
+        if isLegalStep(app, newPlrRow, newPlrCol):
+            #actually move
+            return True, (newPlrRow, newPlrCol)
+        else:
+            # ogre crashed into a wall- change directions, quick !
+            index += 1 
+            return False, possibleDirections[ index % 4]
+
+    def start_setExactCoordinates(self, board):
+        startingX, startingY = self.cell
+        # set x and y's for tweening 
+        self.x, self.y = board.getCellLeftTop(startingX, startingY )
+        self.x_goal, self.y_Goal = board.getCellLeftTop(startingX, startingY)
+
+    def setCoordinates_Goal(self, goalX, goalY):
+        self.x_goal, self.y_Goal = goalX, goalY
+
+    # SAME AS PLAYER .. HMM MAYBE MAKE THEM A CLASS NEXT TIME
+    def tweenSprite(self, currRow, currCol, newRow, newCol, board): 
+        print((currRow, currCol), (newRow, newCol))
+        currX, currY = board.getCellLeftTop(currRow, currCol)
+        goalX, goalY = board.getCellLeftTop(newRow, newCol)
+        if (currX != goalX ) or (currY != goalY):
+            # print('Should be tweening bc x != x or vise versa y')
+            self.setCoordinates_Goal(goalX, goalY) ## this makes onstep() work 
+            self.cell_goal = (newRow, newCol)
+
+    def tweenXValues(self):
+        if self.x > self.x_goal:
+            self.x -= 5
+        elif self.x < self.x_goal:
+            self.x += 5
+        if int(self.x)// 10 == int(self.x_goal)// 10: 
+            # print('both should be equal ')
+            self.x = self.x_goal
+
+    def tweenYValues(self):
+        if self.y > self.y_Goal:
+            self.y -= 5
+        elif self.y < self.y_Goal:
+            self.y += 5
+        if int(self.y) // 10 == int(self.y_Goal) // 10: 
+            # print('both should be equal ')
+            self.y = self.y_Goal
+
+def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
+    outOfBounds =  isOutOfBounds(app, newPlrRow, newPlrCol)  
+    notOnIce =  (newPlrRow, newPlrCol) in app.iceCoordinates
+    notCreashingOntoWall =  (newPlrRow, newPlrCol) in app.wallCoordinates
+    return not ( outOfBounds or notOnIce or notCreashingOntoWall)
+
+def isOutOfBounds(app, newPlrRow, newPlrCol):
+    if ((newPlrRow < 0) or (newPlrRow >= app.board.rows) or
+        (newPlrCol < 0) or (newPlrCol >= app.board.cols)): # out of bounds 
+        return True
+    return False
 
 
 """
@@ -12,8 +103,8 @@ class Enemy:
 
 
 def drawGreenOgre(app): # GREEN OGRE
-    row, col = app.greenOgre.cell
-    drawWorldImgs(app, row, col, app.greenOgreImg)
+    row, col = self.cell
+    drawWorldImgs(app, row, col, selfImg)
 
 def drawBlueOgre(app): ########//////////////
     row, col = app.blueOgre.cell
@@ -21,30 +112,6 @@ def drawBlueOgre(app): ########//////////////
     
 
 
-
-## GREEN OGRE ######################################################### ////////////////////////////////////////////////////////
-def takeStepEnemy(app):
-    isLegal, var2 = takeStepEnemy_Helper(app, app.greenOgre.direction , app.greenOgre.cell)
-    if isLegal:
-        app.greenOgre.cell = var2
-    else:
-        app.greenOgre.direction = var2
-
-# ENEMY TAKES STEPS / MOVES CELLS - think this is fine, works same as game 
-def takeStepEnemy_Helper(app, direction, location):
-    #                    [ DOWN,   RIGHT, UP,  LEFT]  
-    possibleDirections = [(1, 0),  (0, 1), (-1, 0),  (0, -1)]
-    index =  possibleDirections.index( app.greenOgre.direction ) 
-    rowEnemy, colEnemy = location
-    drow, dcol = direction 
-    newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
-    if isLegalStep(app, newPlrRow, newPlrCol): 
-        #actually move
-        return True, (newPlrRow, newPlrCol)
-    else:
-        # ogre crashed into a wall- change directions, quick !
-        index += 1 
-        return False, possibleDirections[ index % 4]
 
 
 ## RECURSION 
