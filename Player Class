@@ -1,0 +1,154 @@
+# from GameV4_1 import 
+
+# Player class
+class Player: 
+    def __init__(self, controlsList, cell, direction): 
+        self.controlsList = controlsList 
+        # set cell location 
+        self.cell = cell  
+        self.cell_goal = cell # NEW 
+        self.direction = direction # NEW
+        self.isMoving = False 
+        # other characteristics 
+        self.fruitsCollected = 0 
+        self.lives = 3
+        self.spriteChosen = None
+        self.time = 0
+    def __repr__(self):
+        return 'yea ig this is a player'
+    def chooseSprite(self, sprite):
+        self.spriteChosen = sprite
+
+    def start_setPlayerExactCoordinates(self, board):
+        startingX, startingY = self.cell
+        # set x and y's for tweening 
+        self.x, self.y = board.getCellLeftTop(startingX, startingY )
+        self.x_goal, self.y_Goal = board.getCellLeftTop(startingX, startingY)
+
+    # BEHAVIOR 
+    def collectFruit(self, app, newPlrRow, newPlrCol): # USING 
+        # add fruits here and unadd from fruits in MAP/WORLD
+        indexOfFruit = app.fruitCoordinates.index( (newPlrRow, newPlrCol) )
+        app.fruitCoordinates.pop(indexOfFruit)
+        self.fruitsCollected += 1 
+        print(f'Cool, collected a fruit ! Currently have {self.fruitsCollected} fruit(s) ')
+
+    def setPlayerCoordinates_Goal(self, goalX, goalY):
+        self.x_goal, self.y_Goal = goalX, goalY
+        
+
+    def loseLife(self):
+        self.lives -= 1
+
+    # ICE 
+    def createOrDestroyIce_Col(self, app, start, end, col, increment): # helper func - mutating
+        isCreatingIce = False if (start, col ) in app.iceCoordinates else True
+        #DIFF
+        print(self.isMoving)
+        if self.isMoving == True:
+            print('####################################################################################')
+            # extraSinceMoving = 1 if self.direction == else -1 
+            start += increment
+        for rowNum in range (start, end, increment):
+            if isCreatingIce == True:
+                if self.isIceCollidingWithAnotherObj(app, rowNum, col):
+                    return                 
+                app.iceCoordinates.append( (rowNum, col))
+            else:
+                if (rowNum, col) not in app.iceCoordinates or ( (rowNum, col) == app.greenOgre.cell ):
+                    return
+                iceIndex = app.iceCoordinates.index( ( rowNum, col ) )
+                app.iceCoordinates.pop(iceIndex)
+    
+    def createOrDestroyIce_Row(self, app, start, end, row, increment): #  helper func - mutating
+        
+        print('entered this func')
+        isCreatingIce = False if (row, start ) in app.iceCoordinates else True
+
+        if self.isMoving == True:
+            start += increment
+            
+        for colNum in range (start, end, increment):
+            if isCreatingIce == True:
+                if self.isIceCollidingWithAnotherObj(app, row, colNum): # crossed ice
+                    return                 
+                app.iceCoordinates.append( (row, colNum))
+            else:
+                if (row, colNum) not in app.iceCoordinates or ( (row, colNum) == app.greenOgre.cell ):
+                    return                 
+                iceIndex = app.iceCoordinates.index( ( row, colNum ) )
+                app.iceCoordinates.pop(iceIndex)
+
+    
+    def isIceCollidingWithAnotherObj(self, app, row, col):
+        return ( (row, col) in app.iceCoordinates ) or ( (row, col) == app.greenOgre.cell ) or  ( (row, col) in app.wallCoordinates )
+
+    def manageIce(self, app):#drow, dcol
+        row, col = self.cell
+
+
+        # CHECKING COL - row is changing 
+        if self.direction == (-1, 0): # UP    
+            self.createOrDestroyIce_Col(app, row-1, -1, col, -1)
+        elif self.direction == (1, 0): # DOWN
+            self.createOrDestroyIce_Col(app, row+1, app.board.rows, col, 1)
+        # CHECKING ROW - column is changing 
+        elif self.direction == (0, -1): # LEFT 
+            self.createOrDestroyIce_Row(app, col-1, -1, row, -1)
+
+        elif self.direction == (0, 1): # RIGHT 
+            self.createOrDestroyIce_Row(app, col+1, app.board.cols, row, 1)
+    
+    #  MOVE
+    #  PLAYER WALKS TO DIF CELL -- collisions for player should be good now
+    def takeStep(self, app, isLegal):
+        plrRow, plrCol = self.cell
+        drow, dcol = self.direction 
+        newPlrRow, newPlrCol = plrRow + drow, plrCol + dcol #player moves here -- new coordinates
+        # #CHECK IF OUT OF BOUNDS and NOT TOUCHING ICE
+        # if isLegalStep(app, newPlrRow, newPlrCol) and (self.cell == self.cell_goal):
+        if isLegal:
+            #actually move
+            self.tweenSprite(plrRow, plrCol, newPlrRow, newPlrCol, app.board) # working on this #############################################################################################
+            return
+            if (newPlrRow, newPlrCol) in app.fruitCoordinates  :
+                #fruit was eaten 
+                if len(app.fruitCoordinates) > 0: 
+                    # you still have somewhat to go, there's stil fruits on the map
+                    self.collectFruit(app, newPlrRow, newPlrCol)
+            elif len(app.fruitCoordinates) == 0:
+                # collected all fruits!
+                app.gameWon = True
+                app.gameOver = True
+                print('all fruit were collected! game won??? o_o')
+
+    def tweenSprite(self, currRow, currCol, newRow, newCol, board): ## i think this should be ok ####################################################################################
+        currX, currY = board.getCellLeftTop(currRow, currCol)
+        goalX, goalY = board.getCellLeftTop(newRow, newCol)
+        if (currX != goalX ) or (currY != goalY):
+            # print('Should be tweening bc x != x or vise versa y')
+            self.setPlayerCoordinates_Goal(goalX, goalY) ## this makes onstep() work 
+            self.cell_goal = (newRow, newCol)
+
+    def tweenXValues(self):
+        self.isMoving = True
+        if self.x > self.x_goal:
+            self.x -= 5
+        elif self.x < self.x_goal:
+            self.x += 5
+        if int(self.x)// 10 == int(self.x_goal)// 10: 
+            # print('both should be equal ')
+            self.x = self.x_goal
+
+    def tweenYValues(self):
+        self.isMoving = True
+        if self.y > self.y_Goal:
+            self.y -= 5
+        elif self.y < self.y_Goal:
+            self.y += 5
+        if int(self.y) // 10 == int(self.y_Goal) // 10: 
+            print('both should be equal ')
+            self.y = self.y_Goal
+
+
+print('created a PLAYER class !')
