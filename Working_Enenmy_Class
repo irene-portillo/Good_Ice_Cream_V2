@@ -1,0 +1,151 @@
+class Enemy:
+    def __init__(self, cell, direction ):
+        self.cell = cell
+        self.direction = direction # going down 
+        # MOVEMENT is on onStep()
+
+## GREEN OGRE 
+class GreenOgre:
+    def __init__(self, cell, direction ):
+        self.cell = cell
+        self.cell_goal = cell
+
+        self.direction = direction # going down 
+
+        
+        
+    def takeStep(self, isLegal, app):
+        isLegal, var2 = self.takeStep_Helper(isLegal, app)
+        if isLegal:
+            self.cell_goal = var2
+        else:
+            self.direction = var2
+
+    # ENEMY TAKES STEPS / MOVES CELLS - think this is fine, works same as game 
+    def takeStep_Helper(self, isLegal, app):
+        #                    [ DOWN,   RIGHT, UP,  LEFT]  
+        possibleDirections = [(1, 0),  (0, 1), (-1, 0),  (0, -1)]
+        index =  possibleDirections.index( self.direction ) 
+        rowEnemy, colEnemy = self.cell
+        drow, dcol = self.direction 
+        newPlrRow, newPlrCol = rowEnemy + drow, colEnemy + dcol
+        if isLegal: #  isLegalStep(app, newPlrRow, newPlrCol) 
+            #actually move
+            self.tweenSprite(rowEnemy, colEnemy, newPlrRow, newPlrCol, app.board) ### ##########################################
+            return True, (newPlrRow, newPlrCol)
+        else:
+            # ogre crashed into a wall- change directions, quick !
+            index += 1 
+            return False, possibleDirections[ index % 4]
+
+    def start_setExactCoordinates(self, board):
+        startingX, startingY = self.cell
+        # set x and y's for tweening 
+        self.x, self.y = board.getCellLeftTop(startingX, startingY )
+        self.x_goal, self.y_Goal = board.getCellLeftTop(startingX, startingY)
+
+    def setCoordinates_Goal(self, goalX, goalY):
+        self.x_goal, self.y_Goal = goalX, goalY
+
+    # SAME AS PLAYER .. HMM MAYBE MAKE THEM A CLASS NEXT TIME
+    def tweenSprite(self, currRow, currCol, newRow, newCol, board): 
+        currX, currY = board.getCellLeftTop(currRow, currCol)
+        goalX, goalY = board.getCellLeftTop(newRow, newCol)
+        if (currX != goalX ) or (currY != goalY):
+            # print('Should be tweening bc x != x or vise versa y')
+            self.setCoordinates_Goal(goalX, goalY) ## this makes onstep() work 
+            self.cell_goal = (newRow, newCol)
+
+    def tweenXValues(self):
+        if self.x > self.x_goal:
+            self.x -= 5
+        elif self.x < self.x_goal:
+            self.x += 5
+        if int(self.x)// 10 == int(self.x_goal)// 10: 
+            # print('both should be equal ')
+            self.x = self.x_goal
+
+    def tweenYValues(self):
+        if self.y > self.y_Goal:
+            self.y -= 5
+        elif self.y < self.y_Goal:
+            self.y += 5
+        if int(self.y) // 10 == int(self.y_Goal) // 10: 
+            # print('both should be equal ')
+            self.y = self.y_Goal
+
+
+
+"""
+
+###########################
+
+
+def drawGreenOgre(app): # GREEN OGRE
+    row, col = self.cell
+    drawWorldImgs(app, row, col, selfImg)
+
+def drawBlueOgre(app): ########//////////////
+    row, col = app.blueOgre.cell
+    drawWorldImgs(app, row, col, app.blueOgreImg)
+    
+
+
+
+
+## RECURSION 
+## BLUE OGRE ######################################################### ////////////////////////////////////////////////////////
+def findPathForBlueOgre(app, currPos, goalPos, possibleDirections, listOfMoves, count):
+
+    if currPos == goalPos: #or count > 20: 
+        return listOfMoves
+    else:
+        ogreRow, ogreCol = currPos #app.blueOgre.cell
+        
+        for rowDir, yDir in possibleDirections: 
+            newRow, newCol  = (ogreRow + rowDir) , (ogreCol + yDir)
+            nextMove = (newRow, newCol)
+
+
+            # pop from directions 
+            # currDirX, currDirY = app.blueOgre.direction
+            # popThisDir = (currDirX * -1), (currDirY * -1)
+            # copyDirs = [] + possibleDirections#.copy.copy
+
+            # if popThisDir in possibleDirections:
+            #     print('was in list, popped')
+                
+            #     index = possibleDirections.index(popThisDir)
+            #     copyDirs.pop(index)
+
+                        count += 1 # to stop recur 
+            if (nextMove  in listOfMoves):
+                print('uhmmm') 
+                continue
+            if isLegalStep(app, newRow  ,newCol) :
+                listOfMoves = listOfMoves + [nextMove]
+                print(listOfMoves)
+                # make set to chekc 
+                solution = listOfMoves + findPathForBlueOgre(app, nextMove, goalPos, possibleDirections, listOfMoves, count)
+                # print( solution )
+                if solution != None:
+                    return solution
+            else:
+                print(f'\tnot a legal step for { (rowDir, yDir)} ; you get to location {nextMove}')
+            # just for my sake
+                # print('should be moving on??') 
+                # continue 
+            #else
+            # nextMove = ogreRow + rowDir
+            # try next direction ? 
+        return None
+    
+def takeStep_BlueOgre(app):
+    print('CALLING RECUR')
+    # bestPossiblePath = findQuickestRoute(app.blueOgre.cell, app.playerOne.cell, app )
+    # print(bestPossiblePath)
+    possibleDirections = [(1, 0),  (0, 1), (-1, 0),  (0, -1)]
+    # findPathForBlueOgre(app, app.blueOgre.cell, app.playerOne.cell, possibleDirections,[] ,1 ) # RECURSION -- COMMENTED OUT FOR NOW SO GAME DOES NOT CRASH 
+    
+
+"""
