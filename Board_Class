@@ -1,4 +1,4 @@
-# from attemptOne_ImportingClasses import *
+# BOARD CLASS
 
 class Board:
 
@@ -27,7 +27,7 @@ class Board:
         return (cellLeft, cellTop)
 
     ## THIS IS NEW
-    def createRowsDict(self): # should have walls, ice, enemies location and player 
+    def createRowsDict(self): # should have walls, ice, enemies location and player # may not use this 
         self.rowDict = dict()
         for rowNum in range(self.rows):
             # add colum to list if it's in the row 
@@ -56,16 +56,3 @@ class Board:
 
     
 print('created a BOARD class ! ') 
-
-""" OLD CODE, del after done 
-    
-from other file:
-    CITATION: Board from snake on CS Academy - https://academy.cs.cmu.edu/exercise/13122
-    BOARD - SET VALUES 
-    def setAppValsForBoardPermanent(app):
-        app.rows = 18
-        app.cols = 18
-        app.cellBorderWidth = 1
-"""
-
-
