@@ -1,9 +1,10 @@
+# Decided to combine fruit class in here too because level holds the fruis
+
 class Fruit:
     def __init__(self, listOfCoords, Image):
         self.listOfCoords= listOfCoords
         self.Image = Image 
 
-# Level One 
 class Level:
     def __init__(self, levelNum, fruitsInLevel):
         self.levelNum = levelNum
@@ -43,31 +44,3 @@ class Level:
         
         index = listForFruit.index(coordinates)        
         listForFruit.pop(index)
-
-# for testing
-# LevelOne = Level(1, ['lemons', 'grapes'] )
-
-# LevelOne.setDictOfFruits('lemons', [1,2,3] , 'pretend this is an image')
-# print( LevelOne.dictOfFruitCoords)
-
-# LevelOne.removeFruit( 2 )
-
-# print()
-# print( LevelOne.getCoordsOfFruit('lemons'))
-# from cmu_graphics import *
-
-# def redrawAll(app):
-#     height = 100
-#     width = 200
-#     x = app.boardWidth/2 - width/2
-#     y = app.boardHeight/2 - height/2
-#     drawRect(x , y, width, height, fill='white', border = 'black', borderWidth = 5)
-    
-#     mssg = 'CONGRATS! You completed LEVEL ONE' if app.gameWon == True else 'YOU LOST'
-#     drawLabel( {mssg} , app.boardWidth/2 , app.boardHeight/2, size = height/4 )
-
-
-# def main():
-#     runApp()
-
-# main()
