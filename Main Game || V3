@@ -23,7 +23,6 @@ def openImage(fileName):
 # CREATE ALL WORLD IMGS
 def generateWorldImgs(app):
     # CITATION: https://www.spriters-resource.com/resources/sheets/126/129363.png?updated=1586740764 (cropped each out)
-    # - for all ice creams
     app.vanillaImg = generateSingleImg(app, "SingleImages/vanilla_Transparent.png")    
     app.chocolateImg = generateSingleImg(app, "SingleImages/chocolate_IceCream.png")
     app.strawberryImg = generateSingleImg(app, "SingleImages/strawberry_IceCream.png")
@@ -42,20 +41,14 @@ def generateWorldImgs(app):
     # CITATION: https://www.spriters-resource.com/resources/sheets/183/186433.png?updated=1667962706
     # - for all extras
     app.clockImg = generateSingleImg(app, "SingleImages/singleClock.png")
-    app.fruitContainer_Left = generateSingleImg(app, "Images/Extras/fruitContainer_Left.png")
-    app.fruitContainer_MiddleImg = generateSingleImg(app, "Images/Extras/fruitContainer_Middle.png")
-    app.fruitContainer_RightImg = generateSingleImg(app, "Images/Extras/fruitContainer_Right.png")
     # CITATION: https://poki.com/en/g/bad-ice-cream?campaign=14726801018&adgroup=126978578349&extensionid=&targetid=kwd-5566849837&location=9005925&matchtype=e&network=g&device=c&devicemodel=&creative=583090060249&keyword=bad%20ice%20cream&placement=&target=&gclid=CjwKCAiAvJarBhA1EiwAGgZl0LihrDH9JJxw4csden6dycdQH5nRVLVdsqh-Zz5Oe_lDRkcSs9XfQRoCPWEQAvD_BwE
     # - screen shots from the 'Bad Ice Cream' game
-    # - then pieced together with Pixlr
-    #   CITATION: https://pixlr.com/express/
+    # - then pieced together with Pixlr - CITATION: https://pixlr.com/express/
     app.wallImage = generateSingleImg(app, "Images/worldImages/wallBlock.png")
     app.backgroundSnow = generateSingleImg(app, "Images/worldImages/snowBackground_Square.png")
     app.chooseCharImg = generateSingleImg(app, "Images/chooseChar_single.png")
-
     # CITATION: https://cdn.pixabay.com/photo/2017/09/23/16/33/pixel-heart-2779422_640.png
     app.livesImg = generateSingleImg(app, "Images/heart_1.png")
-
     # CITATION: https://art.pixilart.com/661116b177fe475.png  
     app.fruitsCollectedImg = generateSingleImg(app, "Images/fruitsCollected.png")
 
@@ -149,9 +142,9 @@ def tweenGreenOgre(app):
 def checkIfPlrWasTouched_GreenOgre(app, level): # need to change stepPerSecond for this to properly catch all 
     if app.playerOne.cell == app.greenOgre.cell:
         app.playerOne.loseLife()
-        if level == 1:
-            print('restarted level 1!')
-            restartLevel_1(app)            
+        # if level == 1:
+        print('restarted level 1!')
+        restartLevel_1(app)            
         print(f'lives remaining: {app.playerOne.lives}')
         if app.playerOne.lives == 0:
             app.gameOver = True
@@ -297,15 +290,6 @@ def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
 
 ## LEVEL TWO ##///////////////////////////////////////////////////////////////////////////////////////////////////
 def drawFruits_LevelTwo(app):
-    """
-    # drawing all fruits at once
-    for fruit in app.level_1.dictOfFruitCoords:
-        listOFCoords = app.level_1.getCoordsOfFruit(fruit)
-        print( f"Coords for fruit -- {fruit} : {listOFCoords}")
-        
-        for (row, col) in listOFCoords: 
-            drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE  
-    """
     fruit = app.level_2.fruitsInLevel[ app.level_1.fruitIndex ]
     listOFCoords = app.level_2.getCoordsOfFruit(fruit)    
     for (row, col) in listOFCoords: 
@@ -317,8 +301,7 @@ def setStrawBerries_Level2(app) :
 def setIceCoordinates_LevelTwo(app):
     app.iceCoordinates = setSquareCoordinates(1, app.board.rows - 1)
 
-
-#PLACE FOOD RANDOMLY - not using but could use for the strawberries if u want .. 
+#PLACE FOOD RANDOMLY - set strawberries in random legal cells 
 def setRandomCoords(app):
     fruit = app.playerOne.level.fruitsInLevel[app.playerOne.level.fruitIndex]
     listOfFruits = app.playerOne.level.getCoordsOfFruit(fruit)  
@@ -435,23 +418,12 @@ def setGreenOgre_LevelOne(app):
     app.greenOgre.start_setExactCoordinates( app.board)
 
 def drawFruits_LevelOne(app):
-    """
-    # drawing all fruits at once
-    for fruit in app.level_1.dictOfFruitCoords:
-        listOFCoords = app.level_1.getCoordsOfFruit(fruit)
-        print( f"Coords for fruit -- {fruit} : {listOFCoords}")
-        
-        for (row, col) in listOFCoords: 
-            drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE  
-    """
     fruit = app.level_1.fruitsInLevel[ app.level_1.fruitIndex ]
     listOFCoords = app.level_1.getCoordsOfFruit(fruit)    
     for (row, col) in listOFCoords: 
         drawWorldImgs(app, row, col, app.level_1.getImageOfFruit(fruit)) # DRAW FRUIT HERE 
 
 def drawGreenOgre_LevelOne(app):
-    # row, col = app.greenOgre.cell
-    # drawWorldImgs(app, row, col, app.greenOgreImg)
     drawMovableSprite(app, app.greenOgre.x, app.greenOgre.y, app.greenOgreImg)
 
 def drawCompletionBoard_LevelOne(app):
@@ -470,23 +442,21 @@ def drawCompletionBoard_LevelOne(app):
 
 ## RESTARTING :LEVEL ONE ///////   FIX !!!!!
 def restartLevel_1(app):
-    # reset fruits 
-    app.level_1 = Level(1, ['lemon', 'grape']) # makes dict
+    # reset LEVEL (fruits) 
+    app.level_1.fruitIndex = 0
     app.level_1.setDictOfFruits('lemon', setLemonCoordinates_LvlOne(app), app.lemonFruit)
     app.level_1.setDictOfFruits('grape', setGrapeCoordinates_LvlOne(app), app.grapeFruit)
-    print('is the list not resetting??')
-
-    # reset ice
-    setIceCoordinates_LevelOne(app)
-    # reset enemies  
-    setGreenOgre_LevelOne(app)
-
-    # reset player LOCATION
-    app.playerOne.cell =  (3,3)
-    app.playerDirection = (0, -1)
+    # reset PLAYER 
+    cell = (3,3)
+    direction = (0, -1)
+    print('crsashing before this?')
+    app.playerOne.resetPlayer( cell , direction, True)
     app.playerOne.start_setPlayerExactCoordinates(app.board)
-    # reset time ! 
-    app.playerOne.overallTime = app.playerOne.time
+    # reset ICE
+    setIceCoordinates_LevelOne(app)
+    # reset ENEMIES  
+    setGreenOgre_LevelOne(app)
+    print('RESET LEVEL 1')
 
 
 ## MAIN FUNCS ##
@@ -523,9 +493,10 @@ def LevelOne_redrawAll(app):
 # MONITOR USER INPUT 
 def LevelOne_onKeyPress(app, key):
     if key == 'r': 
+        restartLevel_1(app)
+    if key == 'q':
         app.gameWon = True # DELETE THIS LATER - TESTING
         app.gameOver = True # DELETE THIS LATER - TESTING
-        # restartLevel_1(app)
     if key == '1': # this is for testing purposes 
         print(app.playerOne.cell)
 
@@ -551,7 +522,6 @@ def LevelOne_onStep(app):
         # enemy walks around
         app.greenOgre.takeStep(checkIfLegal_GreenOgre(app), app)
         tweenGreenOgre(app)
-        
         
         # player is able to move 
         tweenPlayer(app)
@@ -650,10 +620,11 @@ def onAppStart(app):
 
     # Level one 
     setWallCoords_LevelOne(app.board, app )
+    app.level_1 = Level(1, ['lemon', 'grape']) # makes dict
     restartLevel_1(app)    
     # restartEntireGame(app)
 
 def main():
     runAppWithScreens(initialScreen='menu') 
 
-main() 
+main()
