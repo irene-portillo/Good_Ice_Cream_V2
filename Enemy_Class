@@ -1,8 +1,10 @@
-class Enemy:
+#ENEMIES 
+
+class BlueOgre:
     def __init__(self, cell, direction ):
         self.cell = cell
-        self.direction = direction # going down 
-        # MOVEMENT is on onStep()
+        self.cell_goal = cell
+        self.direction = direction # going down
 
 ## GREEN OGRE 
 class GreenOgre:
