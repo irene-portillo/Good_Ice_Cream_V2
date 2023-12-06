@@ -9,7 +9,7 @@ import os, pathlib
 
 # My classes
 from Player_Class import Player 
-from Enemy_Class import GreenOgre
+from Enemy_Class import GreenOgre, BlueOgre
 from Board_Class import Board
 from Level_Class import Level
 
@@ -120,24 +120,21 @@ def playerTakeStep(app, direction):
     app.playerOne.direction = direction
     app.playerOne.takeStep(app, checkIfLegal(app))
 
-def tweenPlayer(app):
-    #  TWEEN PLAYER  
-    if app.playerOne.x != app.playerOne.x_goal: # press 'a' or 'd' to check this or 
-        app.playerOne.tweenXValues()
-    elif app.playerOne.y != app.playerOne.y_Goal:
-        app.playerOne.tweenYValues()
-    else: # both x and y are equal
-        app.playerOne.isMoving = False
-        app.playerOne.cell = app.playerOne.cell_goal # set the cell
+def blueOgre_TakeStep(app):    
+    # MOVE enemy 2 
+    if app.playerOne.level != None and app.playerOne.level != app.level_1:
+        print('taking step !')
+        app.blueOgre.makeNewPath(app)
 
-def tweenGreenOgre(app):
-    #  TWEEN PLAYER  
-    if app.greenOgre.x != app.greenOgre.x_goal: # press 'a' or 'd' to check this or 
-        app.greenOgre.tweenXValues()
-    elif app.greenOgre.y != app.greenOgre.y_Goal:
-        app.greenOgre.tweenYValues()
+def tweenSprite(sprite):
+    #  TWEEN MOVABLE OBJECT - PLAYER / ENEMY  
+    if sprite.x != sprite.x_goal: # press 'a' or 'd' to check this or 
+        sprite.tweenXValues()
+    elif sprite.y != sprite.y_Goal:
+        sprite.tweenYValues()
     else: # both x and y are equal
-        app.greenOgre.cell = app.greenOgre.cell_goal # set the cell
+        sprite.isMoving = False
+        sprite.cell = sprite.cell_goal # set the cell
 
 def checkIfPlrWasTouched_GreenOgre(app, level): # need to change stepPerSecond for this to properly catch all 
     if app.playerOne.cell == app.greenOgre.cell:
@@ -165,20 +162,30 @@ def pressedKey(app, key):
         elif key == app.playerOne.controlsList[2]: # RIGHT
             app.playerOne.direction = (0, 1)
         # CREATE/DESTROY ICE
-        if key == app.playerOne.controlsList[4]: 
+        if key == app.playerOne.controlsList[4] and app.canMakeIce == True: 
             app.playerOne.manageIce(app)
             # updateRowDict(app.board, app.iceCoordinates) 
 
 def heldKeys(app, keys):
+    
+    if len(keys) >= 2:
+        app.canMakeIce = False
+    else: 
+        app.canMakeIce = True
+
     if not app.gameOver: 
         if app.playerOne.controlsList[1] in keys : # UP    
             playerTakeStep(app, (-1, 0)) # # drow, dcol
+            blueOgre_TakeStep(app)
         elif app.playerOne.controlsList[3] in keys: # DOWN
             playerTakeStep(app, (1, 0))
+            blueOgre_TakeStep(app)
         elif app.playerOne.controlsList[0] in keys: # LEFT
             playerTakeStep(app, (0, -1))
+            blueOgre_TakeStep(app)
         elif app.playerOne.controlsList[2] in keys: # RIGHT 
             playerTakeStep(app, (0, 1) )
+            blueOgre_TakeStep(app)
 
 ## CREATING THE BOARD ## -------------------------------------------------------------
 def setBoard(app):
@@ -290,7 +297,7 @@ def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
 
 ## LEVEL TWO ##///////////////////////////////////////////////////////////////////////////////////////////////////
 def drawFruits_LevelTwo(app):
-    fruit = app.level_2.fruitsInLevel[ app.level_1.fruitIndex ]
+    fruit = app.level_2.fruitsInLevel[ app.level_2.fruitIndex ]
     listOFCoords = app.level_2.getCoordsOfFruit(fruit)    
     for (row, col) in listOFCoords: 
         drawWorldImgs(app, row, col, app.level_2.getImageOfFruit(fruit)) # DRAW FRUIT HERE
@@ -300,6 +307,15 @@ def setStrawBerries_Level2(app) :
 
 def setIceCoordinates_LevelTwo(app):
     app.iceCoordinates = setSquareCoordinates(1, app.board.rows - 1)
+
+def setBlueOgre_LevelTwo(app): ## CHANGE 
+    app.blueOgre = BlueOgre( (14, 3), (0, 1) )
+    app.blueOgre.start_setExactCoordinates( app.board)
+
+def drawBlueOgre_LevelTwo(app):
+    drawMovableSprite(app, app.blueOgre.x, app.blueOgre.y, app.blueOgreImg)
+    # row, col = app.blueOgre.cell
+    # drawWorldImgs(app, row, col, app.blueOgreImg)
 
 #PLACE FOOD RANDOMLY - set strawberries in random legal cells 
 def setRandomCoords(app):
@@ -324,20 +340,21 @@ def setNewStrawberryCoords(app):
             app.playerOne.level.setDictOfFruits( fruit, newCoords,  app.strawberryFruit)
 
 def resetValuesToSTartLevel2(app):
+    # reset game logic
+    app.gameOver = False
+    app.gameWon = False  
+    # reset COORDINATES
     app.wallCoordinates = None
     setWallCoordinates(app.board, app)
     app.iceCoordinates = []
-    setIceCoordinates_LevelTwo(app)
-
-    app.gameOver = False
-    app.gameWon = False
-    
-    app.level_2 = Level(1, ['strawberry'])  
-
+    setIceCoordinates_LevelTwo(app)  
+    # set LEVEL 2 
+    app.level_2 = Level(2, ['strawberry'])  
     app.level_2.setDictOfFruits('strawberry', setStrawBerries_Level2(app), app.strawberryFruit) 
-    
     app.playerOne.level= app.level_2  
-        
+    # set ENEMY
+    setBlueOgre_LevelTwo(app)    
+    app.blueOgre.makeNewPath(app)
 
 def LevelTwo_redrawAll(app):
     # Enviornment
@@ -352,7 +369,7 @@ def LevelTwo_redrawAll(app):
     drawPlayer(app)
     
     # Enemy
-
+    drawBlueOgre_LevelTwo(app)
 
     # Board 
     drawBoard(app.board)
@@ -373,11 +390,15 @@ def LevelTwo_onKeyHold(app, keys): # maybe make it so that u can only hold one o
 
 def LevelTwo_onStep(app):
     if not app.gameOver:
-        
         # player is able to move 
-        tweenPlayer(app)
-
-        # add time 
+        tweenSprite( app.playerOne)
+        # enemy moves 
+        tweenSprite(app.blueOgre)
+        
+        # tween ogre here 
+        app.blueOgre.takeStep(app.board)
+        
+        # add time
         addTime(app)
 
         # random coordinates for strawberies 
@@ -510,6 +531,7 @@ def LevelOne_onKeyHold(app, keys): # maybe make it so that u can only hold one o
 
 def LevelOne_onMouseRelease(app, mouseX, mouseY):
     if app.gameOver and app.gameWon:
+        print('line 519, pressed, game over ig')
         resetValuesToSTartLevel2(app) # reset values to prepare for second 
         setActiveScreen('LevelTwo')
 
@@ -521,10 +543,10 @@ def LevelOne_onStep(app):
 
         # enemy walks around
         app.greenOgre.takeStep(checkIfLegal_GreenOgre(app), app)
-        tweenGreenOgre(app)
+        tweenSprite( app.greenOgre)
         
         # player is able to move 
-        tweenPlayer(app)
+        tweenSprite( app.playerOne)
 
         # add time 
         addTime(app)
@@ -602,7 +624,7 @@ def setPlayer(app):
     controls_option2 = [ 'left', 'up', 'right', 'down', 'space'] # not using this for now
     app.playerOne = Player( controls, (3,3), (0, -1))
     app.playerOne.start_setPlayerExactCoordinates(app.board)
-
+    app.canMakeIce = False      ## DEL LATER (????)
 
 def onAppStart(app):
     # Menu 
