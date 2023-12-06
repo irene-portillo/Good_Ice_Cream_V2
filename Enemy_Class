@@ -1,10 +1,166 @@
 #ENEMIES 
+# class Enemy -- thought of using inheritance for this but was unable to learn enough about it to apply it in time
+    
 
-class BlueOgre:
+class BlueOgre():
     def __init__(self, cell, direction ):
         self.cell = cell
         self.cell_goal = cell
-        self.direction = direction # going down
+        self.direction = direction # going down 
+        self.path = None # NEW 
+        
+    def start_setExactCoordinates(self, board):
+        startingX, startingY = self.cell
+        # set x and y's for tweening 
+        self.x, self.y = board.getCellLeftTop(startingX, startingY )
+        self.x_goal, self.y_Goal = board.getCellLeftTop(startingX, startingY)
+    
+    def setCoordinates_Goal(self, goalX, goalY):
+        self.x_goal, self.y_Goal = goalX, goalY
+
+    # SAME AS PLAYER .. HMM MAYBE MAKE THEM A CLASS NEXT TIME
+    def tweenSprite(self, currRow, currCol, newRow, newCol, board): 
+        currX, currY = board.getCellLeftTop(currRow, currCol)
+        goalX, goalY = board.getCellLeftTop(newRow, newCol)
+        if (currX != goalX ) or (currY != goalY):
+            # print('Should be tweening bc x != x or vise versa y')
+            self.setCoordinates_Goal(goalX, goalY) ## this makes onstep() work 
+            self.cell_goal = (newRow, newCol)
+
+    def tweenXValues(self):
+        if self.x > self.x_goal:
+            self.x -= 5
+        elif self.x < self.x_goal:
+            self.x += 5
+        if int(self.x)// 10 == int(self.x_goal)// 10: 
+            # print('both should be equal ')
+            self.x = self.x_goal
+
+    def tweenYValues(self):
+        if self.y > self.y_Goal:
+            self.y -= 5
+        elif self.y < self.y_Goal:
+            self.y += 5
+        if int(self.y) // 10 == int(self.y_Goal) // 10: 
+            # print('both should be equal ')
+            self.y = self.y_Goal
+
+    # def takeStep(self, isLegal, app): ////////////////////////////////////////////////////////
+    def reorderDirections(self, app):
+        # general directions: down, right, left, up
+        directions = [(1, 0),  (0, 1), (-1, 0),  (0, -1)]
+        
+        #these are what we'll return 
+        setOfMaxMoves = set()
+        dictOfMaxMoves = dict()    
+        orderedDirections = list()
+
+        for row, col in directions:
+            # moves per path taken
+            maxMoves = 0 # reset
+
+            # check to make sure you can make the step
+            ogreRow, ogreCol = self.cell
+            possibleRow =  ogreRow  + row
+            possibleCol = ogreCol  + col
+            while isLegalStep(app, possibleRow, possibleCol):
+                maxMoves += 1
+                possibleRow += row
+                possibleCol += col
+            # record the amount of moves possible
+            setOfMaxMoves.add(maxMoves)
+            if maxMoves in dictOfMaxMoves:
+                dictOfMaxMoves[ maxMoves ] += [ (row, col) ]
+            else:
+                dictOfMaxMoves[ maxMoves ] = [ (row, col) ]
+            # what about for when theyre the same 
+        
+        listOfMaxMoves = list(setOfMaxMoves)
+        # print(listOfMaxMoves)
+        # print(dictOfMaxMoves)     
+        
+        # sort for listOfMaxMoves, from GREATEST MOVES to LEAST MOVES 
+        sortedMoves =  list(reversed( sorted(listOfMaxMoves) ) )
+        # print(sortedMoves)
+        for key in sortedMoves:
+            # print( dictOfMaxMoves[key])
+            if len(dictOfMaxMoves[key]) > 0:
+                for row, col in dictOfMaxMoves[key]:
+                    orderedDirections.append( (row, col))    
+            else:
+                orderedDirections.append(dictOfMaxMoves[key])
+        # print(orderedDirections)
+        return orderedDirections
+
+
+    def findPathForBlueOgre(self, app, currPos, goalPos, listOfMoves):## RECURSION HERE -- MAKE PATH 
+        # You got to the player !
+        if currPos == goalPos:
+            return listOfMoves
+        else:
+            # NEW recursive call
+            # print('trying new recursive call')
+            ogreRow, ogreCol = currPos # cell of ogre
+            goalRow, goalCol = goalPos # cell of plr 
+
+            #possibleDirections = [(1, 0),  (0, 1), (-1, 0),  (0, -1)] # up, right, down, left
+            possibleDirections = self.reorderDirections( app) # reordered
+            # print( possibleDirections) 
+
+            
+            # Go through all possible directions to see if is possible
+            for rowDir, yDir in possibleDirections:
+                # print(f'\tcurrentMove is at {currPos}, attempting for ({rowDir, yDir})') 
+
+                # Make sure ogre stays in same row/col as player if ogre is already there            
+                if ogreRow == goalRow:
+                    if rowDir != 0: continue   
+                elif ogreCol == goalCol:
+                    if yDir != 0: continue 
+
+                # Make your next move a NEW CELL
+                newRow, newCol  = (ogreRow + rowDir) , (ogreCol + yDir)
+                nextMove = (newRow, newCol)
+
+                # CHECK if youve already moved there, skip it if you have
+                if (nextMove  in listOfMoves):
+                    # print(f'\t\t{nextMove} was in list of moves already so not going back, continuing onto the next  ') 
+                    continue
+                
+                # Make sure it's a legal move
+                if isLegalStep(app, newRow  ,newCol) :
+                    listOfMoves = listOfMoves + [nextMove]
+                    solution = self.findPathForBlueOgre(app, nextMove, goalPos, listOfMoves) # recursive call
+                    # You found a solution !
+                    if solution != None:
+                        # print( f'found a solution! = {solution}' )
+                        return solution
+                # else:
+                    # print(f'\t\twas not a legal step for { (rowDir, yDir)} ; you get to location {nextMove}')
+            # print('got back, there was nothing for this one')
+            return None
+        
+    def makeNewPath(self, app):## RECURSION HERE -- SET PATH 
+        print('new path was made')
+        # print('CALLING RECUR')
+        self.path = self.findPathForBlueOgre(app, self.cell, app.playerOne.cell, [] ) # RECURSION -- COMMENTED OUT FOR NOW SO GAME DOES NOT CRASH 
+        # print(self.path)
+        # print('YAYYYYY got a path!!!!')
+
+    def takeStep(self, board):
+        
+        # TWEEN OGRE 
+        if self.path != None and len(self.path) != 0: #and  app.playerOne.isMoving == False:
+            print('enterend tween thing ')
+            # self.cell_goal = self.path.pop(0)
+            newRow, newCol = self.path.pop(0)
+            rowEnemy, colEnemy = self.cell
+            #actually move 
+            self.tweenSprite(rowEnemy, colEnemy, newRow, newCol, board) 
+
+        elif self.path == None:
+            # pass # DEL AFTER RECU
+            print('no option to move! all directions are blocked :(')
 
 ## GREEN OGRE 
 class GreenOgre:
@@ -89,6 +245,9 @@ def isLegalStep(app, newPlrRow, newPlrCol):  # O(1)?
 """
 
 ###########################
+OLDDDDDDDDD
+
+
 
 def drawBlueOgre(app): ########//////////////
     row, col = app.blueOgre.cell
