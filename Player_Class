@@ -3,11 +3,8 @@
 class Player: 
     def __init__(self, controlsList, cell, direction): 
         self.controlsList = controlsList 
-        # set cell location 
-        self.cell = cell  
-        self.cell_goal = cell # NEW 
-        self.direction = direction # NEW
-        self.isMoving = False 
+
+        self.resetPlayer( cell, direction, True)
         # other characteristics 
         self.fruitsCollected = 0 
         self.lives = 3
@@ -16,11 +13,21 @@ class Player:
         self.overallTime = 0
         self.level = None
 
+    def resetPlayer(self, cell, direction, isLevel1): ## NEWWWW
+        print('resetting..')
+        # set cell location 
+        self.cell = cell  
+        self.cell_goal = cell # NEW 
+        self.direction = direction # NEW
+        self.isMoving = False  
+
+        if isLevel1:
+            self.fruitsCollected = 0
+
     def __repr__(self):
         return 'yea ig this is a player'
     def chooseSprite(self, sprite):
         self.spriteChosen = sprite
-
 
     def start_setPlayerExactCoordinates(self, board):
         startingX, startingY = self.cell
@@ -28,7 +35,8 @@ class Player:
         self.x, self.y = board.getCellLeftTop(startingX, startingY )
         self.x_goal, self.y_Goal = board.getCellLeftTop(startingX, startingY)
 
-    # BEHAVIOR 
+    # BEHAVIOR         
+    
     def collectFruit(self, newPlrRow, newPlrCol): # USING 
         # add fruits here and unadd from fruits in MAP/WORLD'
         self.level.removeFruit((newPlrRow, newPlrCol))
